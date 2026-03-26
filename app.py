@@ -55,7 +55,7 @@ def submit():
     try:
         sender_email = "masountajinder@gmail.com"
         receiver_email = "masountajinder@gmail.com"
-        password = "abcd efgh ijkl mnop"
+        password = "uweb itvc itxm pbhi"
 
         msg = MIMEText(f"""
 New Complaint:
