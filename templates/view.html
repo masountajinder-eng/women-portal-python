@@ -8,29 +8,30 @@
 <h2>All Complaints</h2>
 
 <table border="1">
-    <tr>
-        <th>ID</th>
-        <th>Email</th>
-        <th>Relation</th>
-        <th>Qtr</th>
-        <th>Address</th>
-        <th>Complaint</th>
-        <th>Action</th>
-    </tr>
+<tr>
+    <th>ID</th>
+    <th>Name</th>
+    <th>Mobile</th>
+    <th>Unit</th>
+    <th>Address</th>
+    <th>Complaint</th>
+    <th>Email</th>
+    <th>Action</th>
+</tr>
 
-    {% for row in data %}
-    <tr>
-        <td>{{ row[0] }}</td>
-        <td>{{ row[1] }}</td>
-        <td>{{ row[2] }}</td>
-        <td>{{ row[3] }}</td>
-        <td>{{ row[4] }}</td>
-        <td>{{ row[5] }}</td>
-        <td>
-            <a href="/delete/{{ row[0] }}">Delete</a>
-        </td>
-    </tr>
-    {% endfor %}
+{% for row in data %}
+<tr>
+    <td>{{ row.id }}</td>
+    <td>{{ row.name }}</td>
+    <td>{{ row.mobile }}</td>
+    <td>{{ row.unit }}</td>
+    <td>{{ row.address }}</td>
+    <td>{{ row.complaint }}</td>
+    <td>{{ row.email }}</td>
+    <td><a href="/delete/{{ row.id }}">Delete</a></td>
+</tr>
+{% endfor %}
+
 </table>
 
 <br>

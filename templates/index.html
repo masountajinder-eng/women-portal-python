@@ -7,26 +7,20 @@
 
 <h2>Submit Complaint</h2>
 
-<form action="/submit" method="POST">
+<form action="/submit" method="post">
+    Name: <input type="text" name="name"><br><br>
+    Mobile: <input type="text" name="mobile"><br><br>
+    Unit/Coy: <input type="text" name="unit"><br><br>
+    Address: <input type="text" name="address"><br><br>
+    Complaint:<br>
+    <textarea name="complaint"></textarea><br><br>
+    Email: <input type="email" name="email"><br><br>
 
-    Email: <input type="email" name="email" required><br><br>
-
-    Relation (W/O): <input type="text" name="relation" required><br><br>
-
-    Qtr No: <input type="text" name="qtr" required><br><br>
-
-    Address: <input type="text" name="address" required><br><br>
-
-    Complaint: <br>
-    <textarea name="complaint" required></textarea><br><br>
-
-    <input type="submit" value="Submit">
-
+    <button type="submit">Submit</button>
 </form>
 
-<br><br>
-
-<a href="/view">View Complaints</a>
+<br>
+<a href="/view">View All Complaints</a>
 
 </body>
 </html>
