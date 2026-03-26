@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard</title>
+</head>
+<body>
+
+<h2>Admin Dashboard - All Complaints</h2>
+
+<table border="1" cellpadding="10">
+<tr>
+    <th>ID</th>
+    <th>Name</th>
+    <th>Mobile</th>
+    <th>Unit</th>
+    <th>Email</th>
+    <th>Relation</th>
+    <th>Qtr No</th>
+    <th>Address</th>
+    <th>Complaint</th>
+    <th>Reply</th>
+</tr>
+
+{% for row in rows %}
+<tr>
+    <td>{{row[0]}}</td>
+    <td>{{row[1]}}</td>
+    <td>{{row[2]}}</td>
+    <td>{{row[3]}}</td>
+    <td>{{row[4]}}</td>
+    <td>{{row[5]}}</td>
+    <td>{{row[6]}}</td>
+    <td>{{row[7]}}</td>
+    <td>{{row[8]}}</td>
+    <td>
+        <form action="/reply/{{row[0]}}" method="POST">
+            <input type="text" name="reply" value="{{row[9]}}" placeholder="Type reply">
+            <br><br>
+            <input type="submit" value="Send">
+        </form>
+    </td>
+</tr>
+{% endfor %}
+
+</table>
+
+<br><br>
+
+<a href="/">🏠 Go Home</a>
+
+</body>
+</html>

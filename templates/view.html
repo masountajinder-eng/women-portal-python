@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>All Complaints</title>
+</head>
+<body>
+
+<h2>All Complaints</h2>
+
+<table border="1">
+    <tr>
+        <th>ID</th>
+        <th>Email</th>
+        <th>Relation</th>
+        <th>Qtr</th>
+        <th>Address</th>
+        <th>Complaint</th>
+        <th>Action</th>
+    </tr>
+
+    {% for row in data %}
+    <tr>
+        <td>{{ row[0] }}</td>
+        <td>{{ row[1] }}</td>
+        <td>{{ row[2] }}</td>
+        <td>{{ row[3] }}</td>
+        <td>{{ row[4] }}</td>
+        <td>{{ row[5] }}</td>
+        <td>
+            <a href="/delete/{{ row[0] }}">Delete</a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+<br>
+<a href="/">Back to Home</a>
+
+</body>
+</html>

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Complaint Form</title>
+</head>
+<body>
+
+<h2>Women's Complaint Form</h2>
+
+<form action="/submit" method="POST">
+
+    Name: <input type="text" name="name" required><br><br>
+
+    Mobile: <input type="text" name="mobile" required><br><br>
+
+    Unit: <input type="text" name="unit" required><br><br>
+
+    Email: <input type="email" name="email" required><br><br>
+
+    Relation (W/O): <input type="text" name="relation" required><br><br>
+
+    Qtr No: <input type="text" name="qtr" required><br><br>
+
+    Address: <input type="text" name="address" required><br><br>
+
+    Complaint: <textarea name="complaint" required></textarea><br><br>
+
+    <input type="submit" value="Submit">
+
+</form>
+
+<br><br>
+<a href="/view">View Complaints</a> |
+<a href="/admin">Admin Login</a>
+
+</body>
+</html>
