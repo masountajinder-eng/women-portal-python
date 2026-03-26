@@ -1,15 +1,67 @@
 from flask import Flask, render_template, request
+import sqlite3
 import os
+import smtplib
+from email.mime.text import MIMEText
 
 app = Flask(__name__)
 
-# ---------------- HOME PAGE ----------------
+# ---------------- DATABASE INIT ----------------
+def init_db():
+    conn = sqlite3.connect('database.db')
+    c = conn.cursor()
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS messages (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT,
+            email TEXT,
+            message TEXT
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+init_db()
+
+# ---------------- EMAIL FUNCTION ----------------
+def send_email(name, email, message):
+    try:
+        sender_email = "masountajinder@gmail.com"        # 👈 apna gmail
+        sender_password = "uwebitvcitxmpbhi"      # 👈 Gmail App Password
+
+        receiver_email = "masountajinder@gmail.com"     # 👈 admin email
+
+        subject = "New Form Submission"
+        body = f"""
+Name: {name}
+Email: {email}
+Message: {message}
+"""
+
+        msg = MIMEText(body)
+        msg['Subject'] = subject
+        msg['From'] = sender_email
+        msg['To'] = receiver_email
+
+        server = smtplib.SMTP("smtp.gmail.com", 587)
+        server.starttls()
+        server.login(sender_email, sender_password)
+        server.send_message(msg)
+        server.quit()
+
+        print("✅ Email sent successfully")
+
+    except Exception as e:
+        print("❌ Email error:", e)
+
+
+# ---------------- HOME ----------------
 @app.route('/')
 def home():
     return render_template('index.html')
 
 
-# ---------------- SUBMIT FORM ----------------
+# ---------------- SUBMIT ----------------
 @app.route('/submit', methods=['GET', 'POST'])
 def submit():
     if request.method == 'POST':
@@ -18,13 +70,19 @@ def submit():
             email = request.form.get('email')
             message = request.form.get('message')
 
-            print("Form Data:", name, email, message)
+            # SAVE TO DATABASE
+            conn = sqlite3.connect('database.db')
+            c = conn.cursor()
+            c.execute("INSERT INTO messages (name, email, message) VALUES (?, ?, ?)",
+                      (name, email, message))
+            conn.commit()
+            conn.close()
 
-            return f"""
-            <h2>✅ Form Submitted Successfully!</h2>
-            <p><b>Name:</b> {name}</p>
-            <p><b>Email:</b> {email}</p>
-            <p><b>Message:</b> {message}</p>
+            # SEND EMAIL
+            send_email(name, email, message)
+
+            return """
+            <h2>✅ Data Saved + Email Sent!</h2>
             <a href="/">⬅ Back</a>
             """
 
@@ -34,25 +92,22 @@ def submit():
     return "⚠️ Please submit form from homepage"
 
 
-# ---------------- ADMIN PAGE ----------------
+# ---------------- ADMIN PANEL ----------------
 @app.route('/admin')
 def admin():
-    return render_template('admin.html')
+    conn = sqlite3.connect('database.db')
+    c = conn.cursor()
+    c.execute("SELECT * FROM messages")
+    data = c.fetchall()
+    conn.close()
+
+    return render_template('admin.html', data=data)
 
 
-# ---------------- DASHBOARD ----------------
-@app.route('/dashboard')
-def dashboard():
-    return render_template('dashboard.html')
-
-
-# ---------------- VIEW PAGE ----------------
-@app.route('/view')
-def view():
-    return render_template('view.html')
-
-
-# ---------------- RUN (RENDER SAFE) ----------------
+# ---------------- RUN ----------------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
+    import resend
+
+resend.api_key = "re_i5UKKcEF_6o9QywHvtjExCvUP462dGuG2"
