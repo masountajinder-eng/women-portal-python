@@ -1,22 +1,18 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>All Complaints</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Data</title>
 </head>
 <body>
 
-<h1>All Complaints</h1>
+<h2>All Submissions</h2>
 
-<table border="1" align="center">
+<table border="1">
 <tr>
     <th>ID</th>
     <th>Name</th>
-    <th>Mobile</th>
-    <th>Address</th>
-    <th>Unit</th>
-    <th>Complaint</th>
     <th>Email</th>
+    <th>Message</th>
 </tr>
 
 {% for row in data %}
@@ -25,16 +21,13 @@
     <td>{{ row[1] }}</td>
     <td>{{ row[2] }}</td>
     <td>{{ row[3] }}</td>
-    <td>{{ row[4] }}</td>
-    <td>{{ row[5] }}</td>
-    <td>{{ row[6] }}</td>
 </tr>
 {% endfor %}
 
 </table>
 
 <br>
-<a href="/">Back to Home</a>
+<a href="/">Back</a>
 
 </body>
 </html>
