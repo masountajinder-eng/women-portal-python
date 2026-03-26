@@ -1,41 +1,31 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>All Complaints</title>
+    <title>View Data</title>
 </head>
-<body>
+<body style="font-family: Arial; text-align:center;">
 
-<h2>All Complaints</h2>
+<h2>Saved Data</h2>
 
-<table border="1">
+<table border="1" align="center">
 <tr>
     <th>ID</th>
     <th>Name</th>
     <th>Mobile</th>
-    <th>Unit</th>
-    <th>Address</th>
-    <th>Complaint</th>
-    <th>Email</th>
-    <th>Action</th>
 </tr>
 
 {% for row in data %}
 <tr>
-    <td>{{ row.id }}</td>
-    <td>{{ row.name }}</td>
-    <td>{{ row.mobile }}</td>
-    <td>{{ row.unit }}</td>
-    <td>{{ row.address }}</td>
-    <td>{{ row.complaint }}</td>
-    <td>{{ row.email }}</td>
-    <td><a href="/delete/{{ row.id }}">Delete</a></td>
+    <td>{{ row[0] }}</td>
+    <td>{{ row[1] }}</td>
+    <td>{{ row[2] }}</td>
 </tr>
 {% endfor %}
 
 </table>
 
-<br>
-<a href="/">Back to Home</a>
+<br><br>
+<a href="/">Back</a>
 
 </body>
 </html>
