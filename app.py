@@ -1,4 +1,4 @@
-tfrom flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect
 import sqlite3
 import smtplib
 from email.mime.text import MIMEText
