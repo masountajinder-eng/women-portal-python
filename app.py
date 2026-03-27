@@ -12,8 +12,10 @@ app = Flask(__name__)
 # 🔐 Secret key (login ke liye)
 app.secret_key = "secret123"
 
-# ✅ API KEY (FIXED INDENTATION)
+# ✅ API KEY
 resend.api_key = os.environ.get("RESEND_API_KEY")
+
+print("🔥 NEW CODE LOADED")   # ✅ DEBUG LINE
 
 # -------- DATABASE --------
 def init_db():
@@ -64,6 +66,12 @@ def send_email(data):
         print("❌ Email error:", str(e))
 
 
+# -------- TEST ROUTE --------
+@app.route('/test')
+def test():
+    return "✅ NEW CODE WORKING"
+
+
 # -------- LANDING --------
 @app.route('/')
 def landing():
@@ -104,7 +112,6 @@ def submit():
         conn.commit()
         conn.close()
 
-        # 📧 Email send
         send_email(data)
 
         return f"✅ Complaint Submitted! Your ID: {complaint_id}"
