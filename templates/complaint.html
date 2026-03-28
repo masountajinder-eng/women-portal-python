@@ -17,16 +17,21 @@
     </div>
 
     <!-- 🔥 FORM START -->
-    <form method="POST" action="/complaint">
+    <form action="/complaint" method="POST">
 
     <!-- BASIC DETAILS -->
     <div class="card">
         <h3>Basic Details</h3>
 
-        <input type="text" name="name" placeholder="Name">
+        <input type="text" name="name" placeholder="Name" required>
         <input type="text" name="wo" placeholder="Husband Rank & Name">
-        <input type="text" name="contact" placeholder="Contact Number">
+        <input type="text" name="contact" placeholder="Contact Number" required>
         <input type="text" name="address" placeholder="Address">
+
+        <!-- ✅ ADDED FIELDS -->
+        <input type="email" name="email" placeholder="Email">
+        <input type="text" name="unit" placeholder="Unit">
+        <input type="text" name="quarter" placeholder="Quarter">
     </div>
 
     <!-- CATEGORY -->
@@ -45,7 +50,7 @@
     <div class="card">
         <h3>Describe Your Concern</h3>
 
-        <textarea name="complaint" placeholder="Write your issue here..."></textarea>
+        <textarea name="complaint" placeholder="Write your issue here..." required></textarea>
 
         <button type="button" class="record">🎤 Record</button>
         <button type="button" class="stop">⏹ Stop</button>
@@ -55,7 +60,7 @@
 
     <button type="button" class="emergency">🚨 Emergency</button>
 
-    <!-- ✅ SUBMIT BUTTON FIX -->
+    <!-- ✅ SUBMIT -->
     <button type="submit" class="submit">Submit</button>
 
     </form>
