@@ -1,44 +1,22 @@
 <link rel="stylesheet" href="/static/style.css">
 
-<!-- HEADER WITH LOGO -->
-
-<div class="header">
-    <img src="{{ url_for('static', filename='logo.png') }}" class="logo">
-    <h1>237 Engr Regt Women Sahara</h1>
-</div>
-
-<!-- NAVBAR -->
-
-<div class="navbar">Complaint Form</div>
-
-<!-- MAIN FORM -->
+<div class="navbar">Submit Complaint</div>
 
 <div class="container">
-    <div class="card">
-        <h2>Submit Complaint</h2>
+<div class="card">
 
-```
-    <form method="POST" action="/submit">
-        
-        <label>Name</label>
-        <input type="text" name="name" required>
+<form action="/submit" method="POST">
+    <input name="name" placeholder="Name" required>
+    <input name="address" placeholder="Address">
+    <input name="contact" placeholder="Contact">
+    <input name="email" placeholder="Email">
+    <input name="unit" placeholder="Unit">
+    <input name="wo" placeholder="WO">
+    <input name="quarter" placeholder="Quarter">
+    <textarea name="complaint" placeholder="Your Complaint"></textarea>
 
-        <label>Mobile Number</label>
-        <input type="text" name="mobile" required>
+    <button type="submit">Submit</button>
+</form>
 
-        <label>Complaint Type</label>
-        <input type="text" name="type" required>
-
-        <label>Description</label>
-        <textarea name="description" rows="4" required></textarea>
-
-        <button type="submit">Submit Complaint</button>
-    </form>
-
-    <br>
-
-    <a href="/"><button>Back to Home</button></a>
 </div>
-```
-
 </div>
