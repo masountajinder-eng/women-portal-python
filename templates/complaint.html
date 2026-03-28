@@ -16,14 +16,17 @@
         All submissions can be made anonymously and will be handled with strict confidentiality.
     </div>
 
+    <!-- 🔥 FORM START -->
+    <form method="POST" action="/complaint">
+
     <!-- BASIC DETAILS -->
     <div class="card">
         <h3>Basic Details</h3>
 
-        <input type="text" placeholder="Name">
-        <input type="text" placeholder="Husband Rank & Name">
-        <input type="text" placeholder="Contact Number">
-        <input type="text" placeholder="Address">
+        <input type="text" name="name" placeholder="Name">
+        <input type="text" name="wo" placeholder="Husband Rank & Name">
+        <input type="text" name="contact" placeholder="Contact Number">
+        <input type="text" name="address" placeholder="Address">
     </div>
 
     <!-- CATEGORY -->
@@ -42,17 +45,21 @@
     <div class="card">
         <h3>Describe Your Concern</h3>
 
-        <textarea placeholder="Write your issue here..."></textarea>
+        <textarea name="complaint" placeholder="Write your issue here..."></textarea>
 
-        <button class="record">🎤 Record</button>
-        <button class="stop">⏹ Stop</button>
+        <button type="button" class="record">🎤 Record</button>
+        <button type="button" class="stop">⏹ Stop</button>
 
         <audio controls></audio>
     </div>
 
-    <button class="emergency">🚨 Emergency</button>
+    <button type="button" class="emergency">🚨 Emergency</button>
 
-    <button class="submit">Submit</button>
+    <!-- ✅ SUBMIT BUTTON FIX -->
+    <button type="submit" class="submit">Submit</button>
+
+    </form>
+    <!-- 🔥 FORM END -->
 
 </div>
 
