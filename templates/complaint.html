@@ -1,22 +1,60 @@
-<link rel="stylesheet" href="/static/style.css">
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sahara Portal</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
 
-<div class="navbar">Submit Complaint</div>
+<div class="navbar">Sahara Portal</div>
 
 <div class="container">
-<div class="card">
 
-<form action="/submit" method="POST">
-    <input name="name" placeholder="Name" required>
-    <input name="address" placeholder="Address">
-    <input name="contact" placeholder="Contact">
-    <input name="email" placeholder="Email">
-    <input name="unit" placeholder="Unit">
-    <input name="wo" placeholder="WO">
-    <input name="quarter" placeholder="Quarter">
-    <textarea name="complaint" placeholder="Your Complaint"></textarea>
+    <p class="subtitle">Welfare & grievance redressal platform for unit families</p>
 
-    <button type="submit">Submit</button>
-</form>
+    <div class="note">
+        All submissions can be made anonymously and will be handled with strict confidentiality.
+    </div>
+
+    <!-- BASIC DETAILS -->
+    <div class="card">
+        <h3>Basic Details</h3>
+
+        <input type="text" placeholder="Name">
+        <input type="text" placeholder="Husband Rank & Name">
+        <input type="text" placeholder="Contact Number">
+        <input type="text" placeholder="Address">
+    </div>
+
+    <!-- CATEGORY -->
+    <div class="card">
+        <h3>Select Category</h3>
+
+        <div class="grid">
+            <div class="box">🍽️<br>Ration</div>
+            <div class="box">🏠<br>Accommodation</div>
+            <div class="box">👨‍👩‍👧<br>Welfare</div>
+            <div class="box">🛡️<br>Safety</div>
+        </div>
+    </div>
+
+    <!-- DESCRIPTION -->
+    <div class="card">
+        <h3>Describe Your Concern</h3>
+
+        <textarea placeholder="Write your issue here..."></textarea>
+
+        <button class="record">🎤 Record</button>
+        <button class="stop">⏹ Stop</button>
+
+        <audio controls></audio>
+    </div>
+
+    <button class="emergency">🚨 Emergency</button>
+
+    <button class="submit">Submit</button>
 
 </div>
-</div>
+
+</body>
+</html>
