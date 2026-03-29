@@ -11,7 +11,7 @@ app = Flask(__name__)
 app.secret_key = "secret123"
 
 # API KEY
-resend.api_key = os.environ.get("RESEND_API_KEY")
+resend.api_key = "re_M1nePS2H_Mt8QLX8ikfoUUTriHYwdcLeh"
 
 print("🔥 FINAL CODE RUNNING")
 print("API KEY:", resend.api_key)

@@ -16,8 +16,11 @@
         All submissions can be made anonymously and will be handled with strict confidentiality.
     </div>
 
+    <!-- 🔊 ALERT SOUND -->
+    <audio id="alertSound" src="/static/alert.mp3"></audio>
+
     <!-- 🔥 FORM START -->
-    <form action="/complaint" method="POST">
+    <form id="complaintForm">
 
     <!-- BASIC DETAILS -->
     <div class="card">
@@ -28,7 +31,6 @@
         <input type="text" name="contact" placeholder="Contact Number" required>
         <input type="text" name="address" placeholder="Address">
 
-        <!-- ✅ ADDED FIELDS -->
         <input type="email" name="email" placeholder="Email">
         <input type="text" name="unit" placeholder="Unit">
         <input type="text" name="quarter" placeholder="Quarter">
@@ -67,6 +69,35 @@
     <!-- 🔥 FORM END -->
 
 </div>
+
+<!-- 🔥 JS FIX (MOST IMPORTANT) -->
+<script>
+document.getElementById("complaintForm").addEventListener("submit", function(e) {
+    e.preventDefault(); // page reload रोकता है
+
+    let formData = new FormData(this);
+
+    fetch("/complaint", {
+        method: "POST",
+        body: formData
+    })
+    .then(response => response.text())
+    .then(data => {
+        // 🔊 SOUND PLAY
+        document.getElementById("alertSound").play();
+
+        // ✅ SUCCESS MESSAGE
+        alert("✅ Complaint Submitted Successfully!");
+
+        // form reset
+        document.getElementById("complaintForm").reset();
+    })
+    .catch(error => {
+        alert("❌ Error submitting complaint");
+        console.error(error);
+    });
+});
+</script>
 
 </body>
 </html>
