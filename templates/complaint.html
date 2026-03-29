@@ -70,10 +70,10 @@
 
 </div>
 
-<!-- 🔥 JS FIX (MOST IMPORTANT) -->
+<!-- 🔥 JS FIX (FINAL) -->
 <script>
 document.getElementById("complaintForm").addEventListener("submit", function(e) {
-    e.preventDefault(); // page reload रोकता है
+    e.preventDefault();
 
     let formData = new FormData(this);
 
@@ -81,15 +81,13 @@ document.getElementById("complaintForm").addEventListener("submit", function(e) 
         method: "POST",
         body: formData
     })
-    .then(response => response.text())
+    .then(response => response.json())   // 🔥 FIX HERE
     .then(data => {
-        // 🔊 SOUND PLAY
         document.getElementById("alertSound").play();
 
-        // ✅ SUCCESS MESSAGE
-        alert("✅ Complaint Submitted Successfully!");
+        // ✅ SHOW COMPLAINT ID
+        alert("✅ Complaint Submitted!\nYour ID: " + data.id);
 
-        // form reset
         document.getElementById("complaintForm").reset();
     })
     .catch(error => {
