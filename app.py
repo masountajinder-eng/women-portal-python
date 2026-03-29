@@ -10,11 +10,10 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = "secret123"
 
-# API KEY
-resend.api_key = "re_M1nePS2H_Mt8QLX8ikfoUUTriHYwdcLeh"
+# ✅ API KEY (safe तरीका भी दिया है नीचे)
+resend.api_key = os.environ.get("RESEND_API_KEY") or "re_M1nePS2H_Mt8QLX8ikfoUUTriHYwdcLeh"
 
 print("🔥 FINAL CODE RUNNING")
-print("API KEY:", resend.api_key)
 
 # -------- DATABASE --------
 def init_db():
@@ -44,7 +43,7 @@ init_db()
 def send_email(data):
     try:
         resend.Emails.send({
-            "from": "onboarding@resend.dev",   # ✅ FIXED
+            "from": "onboarding@resend.dev",
             "to": ["masountajinder@gmail.com"],
             "subject": f"🚨 New Complaint {data[0]}",
             "html": f"""
@@ -56,17 +55,17 @@ def send_email(data):
                 <p><b>Complaint:</b><br>{data[8] or "No complaint provided"}</p>
             """
         })
-        print("✅ Email sent successfully")
+        print("✅ Email sent")
 
     except Exception as e:
         print("❌ Email error:", str(e))
 
-# -------- TEST ROUTE --------
+# -------- TEST --------
 @app.route('/test')
 def test():
     return "✅ WORKING"
 
-# -------- EMAIL TEST ROUTE --------
+# -------- EMAIL TEST --------
 @app.route('/send-test')
 def send_test():
     try:
@@ -76,7 +75,7 @@ def send_test():
             "subject": "TEST EMAIL",
             "html": "<h1>Email Working ✅</h1>"
         })
-        return "✅ Email Sent Successfully"
+        return "✅ Email Sent"
     except Exception as e:
         return f"❌ Error: {str(e)}"
 
@@ -95,7 +94,7 @@ def check():
 def landing():
     return render_template("landing.html")
 
-# -------- COMPLAINT --------
+# -------- 🔥 COMPLAINT (FIXED JSON RESPONSE) --------
 @app.route('/complaint', methods=['GET', 'POST'])
 def complaint():
     if request.method == 'POST':
@@ -126,11 +125,18 @@ def complaint():
 
             send_email(data)
 
-            return f"✅ Complaint Submitted! Your ID: {complaint_id}"
+            # ✅ IMPORTANT FIX (AJAX के लिए JSON)
+            return jsonify({
+                "status": "success",
+                "id": complaint_id
+            })
 
         except Exception as e:
             print("❌ Submit error:", str(e))
-            return f"Error: {str(e)}"
+            return jsonify({
+                "status": "error",
+                "message": str(e)
+            })
 
     return render_template("complaint.html")
 
