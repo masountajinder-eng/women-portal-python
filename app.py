@@ -8,14 +8,13 @@ import random
 load_dotenv()
 
 app = Flask(__name__)
-
-# 🔐 Secret key
 app.secret_key = "secret123"
 
-# ✅ API KEY
+# API KEY
 resend.api_key = os.environ.get("RESEND_API_KEY")
 
-print("🔥 NEW CODE LOADED")
+print("🔥 FINAL CODE RUNNING")
+print("API KEY:", resend.api_key)
 
 # -------- DATABASE --------
 def init_db():
@@ -41,30 +40,45 @@ def init_db():
 
 init_db()
 
-# -------- EMAIL FUNCTION --------
+# -------- EMAIL --------
 def send_email(data):
     try:
         resend.Emails.send({
-            "from": "Resend <onboarding@resend.dev>",
+            "from": "onboarding@resend.dev",   # ✅ FIXED
             "to": ["masountajinder@gmail.com"],
-            "subject": "🚨 New Complaint Received",
+            "subject": f"🚨 New Complaint {data[0]}",
             "html": f"""
                 <h2>New Complaint Submitted</h2>
                 <p><b>ID:</b> {data[0]}</p>
                 <p><b>Name:</b> {data[1]}</p>
                 <p><b>Email:</b> {data[4]}</p>
                 <p><b>Contact:</b> {data[3]}</p>
-                <p><b>Complaint:</b><br>{data[8]}</p>
+                <p><b>Complaint:</b><br>{data[8] or "No complaint provided"}</p>
             """
         })
-        print("✅ Email sent")
+        print("✅ Email sent successfully")
+
     except Exception as e:
         print("❌ Email error:", str(e))
 
-# -------- TEST --------
+# -------- TEST ROUTE --------
 @app.route('/test')
 def test():
-    return "✅ NEW CODE WORKING"
+    return "✅ WORKING"
+
+# -------- EMAIL TEST ROUTE --------
+@app.route('/send-test')
+def send_test():
+    try:
+        resend.Emails.send({
+            "from": "onboarding@resend.dev",
+            "to": ["masountajinder@gmail.com"],
+            "subject": "TEST EMAIL",
+            "html": "<h1>Email Working ✅</h1>"
+        })
+        return "✅ Email Sent Successfully"
+    except Exception as e:
+        return f"❌ Error: {str(e)}"
 
 # -------- CHECK --------
 @app.route('/check')
@@ -81,14 +95,9 @@ def check():
 def landing():
     return render_template("landing.html")
 
-# -------- FORM --------
-@app.route('/complaint')
-def complaint():
-    return render_template("complaint.html")
-
-# 🔥 FIX: SAME ROUTE HANDLE GET + POST
+# -------- COMPLAINT --------
 @app.route('/complaint', methods=['GET', 'POST'])
-def complaint_submit():
+def complaint():
     if request.method == 'POST':
         try:
             complaint_id = "CMP" + str(random.randint(10000, 99999))
@@ -179,7 +188,7 @@ def reply(cid):
 
     conn = sqlite3.connect("database.db")
     c = conn.cursor()
-    c.execute("UPDATE complaints SET reply=? WHERE complaint_id=?", 
+    c.execute("UPDATE complaints SET reply=? WHERE complaint_id=?",
               (request.form.get('reply'), cid))
     conn.commit()
     conn.close()
