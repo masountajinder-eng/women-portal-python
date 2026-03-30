@@ -57,18 +57,68 @@
 
         <textarea name="complaint" placeholder="Write your issue here..." required></textarea>
 
-        <button type="button" class="record">🎤 Record</button>
-        <button type="button" class="stop">⏹ Stop</button>
+        <!-- 🎤 RECORDING -->
+        <br>
+        <button type="button" onclick="startRecording()">🎤 Record</button>
+        <button type="button" onclick="stopRecording()">⏹ Stop</button>
 
-        <audio controls></audio>
+        <br><br>
+        <audio id="audioPlayback" controls></audio>
+        <input type="hidden" id="audioData" name="audio_data">
     </div>
 
-    <button type="button" class="emergency">🚨 Emergency</button>
+    <!-- 🚨 EMERGENCY BUTTON -->
+    <button type="button" onclick="openEmergency()" class="emergency">🚨 Emergency</button>
 
     <button type="submit" class="submit">Submit</button>
 
     </form>
 
+</div>
+
+<!-- 🚨 POPUP -->
+<div id="emergencyPopup" style="
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.7);
+z-index:999;
+">
+
+<div style="
+background:white;
+width:320px;
+margin:120px auto;
+padding:20px;
+border-radius:12px;
+text-align:center;
+">
+
+<h3>🚨 Emergency Contacts</h3>
+
+<a href="tel:97xxxxxx01">
+    <button style="width:100%; margin:5px; padding:10px;">📞 CO (97xxxxxx01)</button>
+</a>
+
+<a href="tel:96xxxxxx02">
+    <button style="width:100%; margin:5px; padding:10px;">📞 2IC (96xxxxxx02)</button>
+</a>
+
+<a href="tel:95xxxxxx03">
+    <button style="width:100%; margin:5px; padding:10px;">📞 Adjt (95xxxxxx03)</button>
+</a>
+
+<a href="tel:94xxxxxx04">
+    <button style="width:100%; margin:5px; padding:10px;">📞 QM (94xxxxxx04)</button>
+</a>
+
+<br>
+<button onclick="closeEmergency()">❌ Close</button>
+
+</div>
 </div>
 
 <script>
@@ -104,14 +154,65 @@ function selectCategory(e, cat) {
     });
 }
 
-// 🔥 FINAL SUBMIT FIX
+// 🎤 RECORDING
+let mediaRecorder;
+let audioChunks = [];
+
+async function startRecording() {
+    try {
+        let stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+
+        mediaRecorder.ondataavailable = e => {
+            audioChunks.push(e.data);
+        };
+
+        mediaRecorder.onstop = () => {
+            let blob = new Blob(audioChunks, { type: 'audio/webm' });
+            let url = URL.createObjectURL(blob);
+
+            document.getElementById("audioPlayback").src = url;
+
+            let reader = new FileReader();
+            reader.readAsDataURL(blob);
+            reader.onloadend = () => {
+                document.getElementById("audioData").value = reader.result;
+            };
+        };
+
+        mediaRecorder.start();
+        alert("🎤 Recording Started");
+
+    } catch (err) {
+        alert("Mic allow karo ❌");
+    }
+}
+
+function stopRecording() {
+    if (mediaRecorder) {
+        mediaRecorder.stop();
+        alert("✅ Recording Saved");
+    }
+}
+
+// 🚨 POPUP
+function openEmergency() {
+    document.getElementById("emergencyPopup").style.display = "block";
+}
+
+function closeEmergency() {
+    document.getElementById("emergencyPopup").style.display = "none";
+}
+
+// SUBMIT
 document.getElementById("complaintForm").addEventListener("submit", function(e) {
     e.preventDefault();
 
     let category = document.getElementById("category").value;
     let subcategory = document.getElementById("subcategory").value;
 
-    // ✅ validation
     if(!category){
         alert("⚠️ Please select a category");
         return;
@@ -128,37 +229,17 @@ document.getElementById("complaintForm").addEventListener("submit", function(e) 
         method: "POST",
         body: formData
     })
-    .then(async response => {
-        let data;
-
-        try {
-            data = await response.json();
-        } catch {
-            throw new Error("Invalid JSON response");
-        }
-
-        console.log("🔥 SERVER RESPONSE:", data);
-
-        // ✅ SUCCESS CASE
-        if(data.status === "success" && data.id){
+    .then(res => res.json())
+    .then(data => {
+        if(data.status === "success"){
             document.getElementById("alertSound").play();
-
-            alert("✅ Complaint Submitted!\nYour ID: " + data.id);
-
-            // reset form
-            document.getElementById("complaintForm").reset();
-            document.getElementById("subcategoryBox").innerHTML = "";
-            document.querySelectorAll(".box").forEach(el => el.classList.remove("active"));
-        } 
-        // ❌ ERROR CASE
-        else {
-            alert("❌ " + (data.message || "Unknown error"));
+            alert("✅ Complaint Submitted!\nID: " + data.id);
+            location.reload();
+        } else {
+            alert("❌ " + data.message);
         }
     })
-    .catch(error => {
-        alert("❌ Server Error - check console");
-        console.error("ERROR:", error);
-    });
+    .catch(() => alert("❌ Server Error"));
 });
 
 </script>
