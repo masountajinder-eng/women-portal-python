@@ -10,16 +10,20 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = "secret123"
 
-resend.api_key = os.environ.get("RESEND_API_KEY") or "re_M1nePS2H_Mt8QLX8ikfoUUTriHYwdcLeh"
+# ✅ RESEND KEY
+resend.api_key = os.environ.get("RESEND_API_KEY")
 
-print("🔥 FINAL CODE RUNNING")
+print("🔥 FINAL FULLY FIXED CODE RUNNING")
+
+# ✅ DB PATH FIX (VERY IMPORTANT FOR RENDER)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "database.db")
 
 # -------- DATABASE --------
 def init_db():
-    conn = sqlite3.connect("database.db")
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
-    # 🔥 UPDATED TABLE
     c.execute('''
         CREATE TABLE IF NOT EXISTS complaints (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -57,8 +61,8 @@ def send_email(data):
                 <p><b>Email:</b> {data[4]}</p>
                 <p><b>Contact:</b> {data[3]}</p>
                 <p><b>Category:</b> {data[8]}</p>
-                <p><b>Issue:</b> {data[9]}</p>
-                <p><b>Complaint:</b><br>{data[10] or "No complaint provided"}</p>
+                <p><b>Subcategory:</b> {data[9]}</p>
+                <p><b>Complaint:</b><br>{data[10]}</p>
             """
         })
         print("✅ Email sent")
@@ -72,69 +76,69 @@ def send_email(data):
 def test():
     return "✅ WORKING"
 
-# -------- EMAIL TEST --------
-@app.route('/send-test')
-def send_test():
-    try:
-        resend.Emails.send({
-            "from": "onboarding@resend.dev",
-            "to": ["masountajinder@gmail.com"],
-            "subject": "TEST EMAIL",
-            "html": "<h1>Email Working ✅</h1>"
-        })
-        return "✅ Email Sent"
-    except Exception as e:
-        return f"❌ Error: {str(e)}"
 
 # -------- CHECK --------
 @app.route('/check')
 def check():
-    conn = sqlite3.connect("database.db")
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("SELECT COUNT(*) FROM complaints")
     count = c.fetchone()[0]
     conn.close()
     return jsonify({"count": count})
 
+
 # -------- LANDING --------
 @app.route('/')
 def landing():
     return render_template("landing.html")
+
 
 # -------- 🔥 COMPLAINT --------
 @app.route('/complaint', methods=['GET', 'POST'])
 def complaint():
     if request.method == 'POST':
         try:
+            print("📥 FORM DATA:", request.form)
+
             complaint_id = "CMP" + str(random.randint(10000, 99999))
 
-            data = (
-                complaint_id,
-                request.form.get('name'),
-                request.form.get('address'),
-                request.form.get('contact'),
-                request.form.get('email'),
-                request.form.get('unit'),
-                request.form.get('wo'),
-                request.form.get('quarter'),
-                request.form.get('category'),      # ✅ NEW
-                request.form.get('subcategory'),   # ✅ NEW
-                request.form.get('complaint')
-            )
+            name = request.form.get('name')
+            address = request.form.get('address')
+            contact = request.form.get('contact')
+            email = request.form.get('email')
+            unit = request.form.get('unit')
+            wo = request.form.get('wo')
+            quarter = request.form.get('quarter')
+            category = request.form.get('category')
+            subcategory = request.form.get('subcategory')
+            complaint_text = request.form.get('complaint')
 
-            conn = sqlite3.connect("database.db")
+            print("📌 CATEGORY:", category)
+            print("📌 SUBCATEGORY:", subcategory)
+
+            conn = sqlite3.connect(DB_PATH)
             c = conn.cursor()
 
             c.execute("""
                 INSERT INTO complaints 
                 (complaint_id, name, address, contact, email, unit, wo, quarter, category, subcategory, complaint)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, data)
+            """, (
+                complaint_id, name, address, contact, email,
+                unit, wo, quarter, category, subcategory, complaint_text
+            ))
 
             conn.commit()
             conn.close()
 
-            send_email(data)
+            print("✅ SAVED IN DATABASE")
+
+            # email
+            send_email((
+                complaint_id, name, address, contact, email,
+                unit, wo, quarter, category, subcategory, complaint_text
+            ))
 
             return jsonify({
                 "status": "success",
@@ -142,7 +146,7 @@ def complaint():
             })
 
         except Exception as e:
-            print("❌ Submit error:", str(e))
+            print("❌ ERROR:", str(e))
             return jsonify({
                 "status": "error",
                 "message": str(e)
@@ -150,13 +154,14 @@ def complaint():
 
     return render_template("complaint.html")
 
+
 # -------- TRACK --------
 @app.route('/track', methods=['GET', 'POST'])
 def track():
     if request.method == 'POST':
         cid = request.form.get('cid')
 
-        conn = sqlite3.connect("database.db")
+        conn = sqlite3.connect(DB_PATH)
         c = conn.cursor()
         c.execute("SELECT * FROM complaints WHERE complaint_id=?", (cid,))
         data = c.fetchone()
@@ -165,6 +170,7 @@ def track():
         return render_template("track.html", data=data)
 
     return render_template("track.html")
+
 
 # -------- LOGIN --------
 @app.route('/login', methods=['GET', 'POST'])
@@ -176,19 +182,21 @@ def login():
         return "❌ Wrong Username or Password"
     return render_template("login.html")
 
+
 # -------- ADMIN --------
 @app.route('/admin')
 def admin():
     if not session.get('admin'):
         return redirect('/login')
 
-    conn = sqlite3.connect("database.db")
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute("SELECT * FROM complaints")
+    c.execute("SELECT * FROM complaints ORDER BY id DESC")
     data = c.fetchall()
     conn.close()
 
     return render_template("admin.html", data=data)
+
 
 # -------- LOGOUT --------
 @app.route('/logout')
@@ -196,13 +204,14 @@ def logout():
     session.pop('admin', None)
     return redirect('/login')
 
+
 # -------- REPLY --------
 @app.route('/reply/<cid>', methods=['POST'])
 def reply(cid):
     if not session.get('admin'):
         return redirect('/login')
 
-    conn = sqlite3.connect("database.db")
+    conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("UPDATE complaints SET reply=? WHERE complaint_id=?",
               (request.form.get('reply'), cid))
@@ -210,6 +219,7 @@ def reply(cid):
     conn.close()
 
     return redirect('/admin')
+
 
 # -------- RUN --------
 if __name__ == "__main__":
