@@ -20,7 +20,6 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "database.db")
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "static/audio")
 
-# ensure folder exists
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # -------- DATABASE --------
@@ -57,10 +56,7 @@ def send_email(data, audio_link=None):
     try:
         audio_html = ""
         if audio_link:
-            audio_html = f"""
-            <p><b>Audio:</b></p>
-            <a href="{audio_link}">Listen Audio</a>
-            """
+            audio_html = f'<p><b>Audio:</b> <a href="{audio_link}">Listen</a></p>'
 
         resend.Emails.send({
             "from": "onboarding@resend.dev",
@@ -86,17 +82,17 @@ def send_email(data, audio_link=None):
 
 
 # -------- ROUTES --------
+
 @app.route('/')
 def landing():
     return render_template("landing.html")
 
 
+# ✅ COMPLAINT SUBMIT
 @app.route('/complaint', methods=['GET', 'POST'])
 def complaint():
     if request.method == 'POST':
         try:
-            print("📥 FORM DATA:", request.form)
-
             complaint_id = "CMP" + str(random.randint(10000, 99999))
 
             name = request.form.get('name')
@@ -110,7 +106,7 @@ def complaint():
             subcategory = request.form.get('subcategory')
             complaint_text = request.form.get('complaint')
 
-            # 🎤 AUDIO HANDLE
+            # 🎤 AUDIO SAVE
             audio_data = request.form.get("audio")
             audio_path = ""
 
@@ -126,8 +122,6 @@ def complaint():
                         f.write(file_data)
 
                     audio_path = f"/static/audio/{filename}"
-
-                    print("✅ Audio saved:", audio_path)
 
                 except Exception as e:
                     print("❌ Audio error:", str(e))
@@ -148,9 +142,6 @@ def complaint():
             conn.commit()
             conn.close()
 
-            print("✅ SAVED IN DATABASE")
-
-            # 📧 EMAIL
             send_email((
                 complaint_id, name, address, contact, email,
                 unit, wo, quarter, category, subcategory, complaint_text
@@ -162,7 +153,6 @@ def complaint():
             })
 
         except Exception as e:
-            print("❌ ERROR:", str(e))
             return jsonify({
                 "status": "error",
                 "message": str(e)
@@ -171,6 +161,26 @@ def complaint():
     return render_template("complaint.html")
 
 
+# ✅ 🔥 TRACK SYSTEM (NEW ADD)
+@app.route('/track', methods=['GET', 'POST'])
+def track():
+    data = None
+
+    if request.method == 'POST':
+        cid = request.form.get('complaint_id')
+
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+
+        c.execute("SELECT * FROM complaints WHERE complaint_id=?", (cid,))
+        data = c.fetchone()
+
+        conn.close()
+
+    return render_template("track.html", data=data)
+
+
+# ✅ ADMIN PANEL
 @app.route('/admin')
 def admin():
     if not session.get('admin'):
@@ -196,6 +206,7 @@ def check():
     return jsonify({"count": count})
 
 
+# ✅ LOGIN
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -212,6 +223,7 @@ def logout():
     return redirect('/login')
 
 
+# ✅ REPLY
 @app.route('/reply/<cid>', methods=['POST'])
 def reply(cid):
     if not session.get('admin'):
@@ -235,6 +247,7 @@ def reply(cid):
         return jsonify({"status": "error", "message": str(e)})
 
 
+# -------- RUN --------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
