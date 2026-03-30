@@ -19,24 +19,24 @@
     <th>Complaint</th>
     <th>Category</th>
     <th>Subcategory</th>
-    <th>Audio</th> <!-- 🎧 NEW -->
+    <th>Audio</th>
     <th>Reply</th>
+    <th>Action</th> <!-- 🆕 DELETE COLUMN -->
 </tr>
 
 {% for row in data %}
-<tr>
-    <td>{{row[1]}}</td> <!-- complaint_id -->
-    <td>{{row[2]}}</td> <!-- name -->
-    <td>{{row[9]}}</td> <!-- complaint -->
-    <td>{{row[10]}}</td> <!-- category -->
-    <td>{{row[11]}}</td> <!-- subcategory -->
+<tr id="row_{{row[1]}}">
+    <td>{{row[1]}}</td>
+    <td>{{row[2]}}</td>
+    <td>{{row[9]}}</td>
+    <td>{{row[10]}}</td>
+    <td>{{row[11]}}</td>
 
-    <!-- 🎧 AUDIO COLUMN -->
+    <!-- 🎧 AUDIO -->
     <td>
         {% if row[13] %}
             <audio controls style="width:150px;">
                 <source src="{{row[13]}}" type="audio/webm">
-                Your browser does not support audio
             </audio>
         {% else %}
             No Audio
@@ -51,6 +51,15 @@
 
         <p style="color:green;">{{row[12]}}</p>
     </td>
+
+    <!-- 🗑️ DELETE -->
+    <td>
+        <button onclick="deleteComplaint('{{row[1]}}')" 
+        style="background:red;color:white;">
+            Delete
+        </button>
+    </td>
+
 </tr>
 {% endfor %}
 
@@ -91,7 +100,30 @@ function sendReply(id){
     });
 }
 
-// 🔔 AUTO NEW COMPLAINT ALERT
+
+// 🗑️ DELETE FUNCTION
+function deleteComplaint(id){
+
+    if(!confirm("Are you sure delete karna hai?")) return;
+
+    fetch("/delete/" + id, {
+        method: "POST"
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.status === "success"){
+            
+            // 🔥 bina reload ke row remove
+            document.getElementById("row_" + id).remove();
+
+        } else {
+            alert("❌ Delete failed");
+        }
+    });
+}
+
+
+// 🔔 AUTO ALERT
 let lastCount = {{ data|length }};
 
 setInterval(() => {
@@ -100,8 +132,6 @@ setInterval(() => {
     .then(res => {
 
         if (res.count > lastCount) {
-            console.log("New complaint आया!");
-
             document.getElementById("alertSound").play();
 
             setTimeout(() => {

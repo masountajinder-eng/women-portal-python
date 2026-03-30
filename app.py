@@ -161,7 +161,7 @@ def complaint():
     return render_template("complaint.html")
 
 
-# ✅ 🔥 TRACK SYSTEM (NEW ADD)
+# ✅ TRACK SYSTEM
 @app.route('/track', methods=['GET', 'POST'])
 def track():
     data = None
@@ -195,6 +195,7 @@ def admin():
     return render_template("admin.html", data=data)
 
 
+# ✅ CHECK COUNT
 @app.route('/check')
 def check():
     conn = sqlite3.connect(DB_PATH)
@@ -237,6 +238,27 @@ def reply(cid):
 
         c.execute("UPDATE complaints SET reply=? WHERE complaint_id=?",
                   (reply_text, cid))
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({"status": "success"})
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)})
+
+
+# ✅ 🗑️ DELETE (NEW FEATURE)
+@app.route('/delete/<cid>', methods=['POST'])
+def delete(cid):
+    if not session.get('admin'):
+        return jsonify({"status": "error", "message": "Unauthorized"})
+
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+
+        c.execute("DELETE FROM complaints WHERE complaint_id=?", (cid,))
 
         conn.commit()
         conn.close()
