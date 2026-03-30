@@ -16,7 +16,6 @@
         All submissions can be made anonymously and will be handled with strict confidentiality.
     </div>
 
-    <!-- 🔊 ALERT SOUND -->
     <audio id="alertSound" src="/static/alert.mp3"></audio>
 
     <form id="complaintForm">
@@ -46,11 +45,9 @@
             <div class="box" onclick="selectCategory(event,'safety')">🛡️<br>Safety</div>
         </div>
 
-        <!-- hidden fields -->
         <input type="hidden" name="category" id="category">
         <input type="hidden" name="subcategory" id="subcategory">
 
-        <!-- options -->
         <div id="subcategoryBox" class="subcategory-box"></div>
     </div>
 
@@ -77,42 +74,18 @@
 <script>
 
 let options = {
-    ration: [
-        "Non-availability of ration",
-        "Poor quality",
-        "Delayed supply",
-        "CSD issue"
-    ],
-    accommodation: [
-        "Water supply",
-        "Electricity",
-        "Repairs",
-        "Sanitation issue"
-    ],
-    welfare: [
-        "Family issues",
-        "Financial stress",
-        "Counselling request",
-        "Children education"
-    ],
-    safety: [
-        "Harassment",
-        "Security safety",
-        "Domestic safety",
-        "Neighbour disputes"
-    ]
+    ration: ["Non-availability of ration","Poor quality","Delayed supply","CSD issue"],
+    accommodation: ["Water supply","Electricity","Repairs","Sanitation issue"],
+    welfare: ["Family issues","Financial stress","Counselling request","Children education"],
+    safety: ["Harassment","Security safety","Domestic safety","Neighbour disputes"]
 };
 
 function selectCategory(e, cat) {
-
-    // set category value
     document.getElementById("category").value = cat;
 
-    // highlight selected card
     document.querySelectorAll(".box").forEach(el => el.classList.remove("active"));
     e.currentTarget.classList.add("active");
 
-    // show options
     let box = document.getElementById("subcategoryBox");
     box.innerHTML = "";
 
@@ -131,9 +104,23 @@ function selectCategory(e, cat) {
     });
 }
 
-// submit
+// 🔥 FINAL SUBMIT FIX
 document.getElementById("complaintForm").addEventListener("submit", function(e) {
     e.preventDefault();
+
+    let category = document.getElementById("category").value;
+    let subcategory = document.getElementById("subcategory").value;
+
+    // ✅ validation
+    if(!category){
+        alert("⚠️ Please select a category");
+        return;
+    }
+
+    if(!subcategory){
+        alert("⚠️ Please select a subcategory");
+        return;
+    }
 
     let formData = new FormData(this);
 
@@ -141,20 +128,36 @@ document.getElementById("complaintForm").addEventListener("submit", function(e) 
         method: "POST",
         body: formData
     })
-    .then(response => response.json())
-    .then(data => {
-        document.getElementById("alertSound").play();
-        alert("✅ Complaint Submitted!\nYour ID: " + data.id);
+    .then(async response => {
+        let data;
 
-        this.reset();
-        document.getElementById("subcategoryBox").innerHTML = "";
+        try {
+            data = await response.json();
+        } catch {
+            throw new Error("Invalid JSON response");
+        }
 
-        // remove active states
-        document.querySelectorAll(".box").forEach(el => el.classList.remove("active"));
+        console.log("🔥 SERVER RESPONSE:", data);
+
+        // ✅ SUCCESS CASE
+        if(data.status === "success" && data.id){
+            document.getElementById("alertSound").play();
+
+            alert("✅ Complaint Submitted!\nYour ID: " + data.id);
+
+            // reset form
+            document.getElementById("complaintForm").reset();
+            document.getElementById("subcategoryBox").innerHTML = "";
+            document.querySelectorAll(".box").forEach(el => el.classList.remove("active"));
+        } 
+        // ❌ ERROR CASE
+        else {
+            alert("❌ " + (data.message || "Unknown error"));
+        }
     })
     .catch(error => {
-        alert("❌ Error submitting complaint");
-        console.error(error);
+        alert("❌ Server Error - check console");
+        console.error("ERROR:", error);
     });
 });
 

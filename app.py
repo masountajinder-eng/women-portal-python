@@ -10,12 +10,11 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = "secret123"
 
-# ✅ RESEND KEY
 resend.api_key = os.environ.get("RESEND_API_KEY")
 
-print("🔥 FINAL FULLY FIXED CODE RUNNING")
+print("🔥 FINAL ULTRA FIXED CODE RUNNING")
 
-# ✅ DB PATH FIX (VERY IMPORTANT FOR RENDER)
+# ✅ DB PATH
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "database.db")
 
@@ -24,6 +23,7 @@ def init_db():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
+    # Create base table (without category first)
     c.execute('''
         CREATE TABLE IF NOT EXISTS complaints (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -35,12 +35,23 @@ def init_db():
             unit TEXT,
             wo TEXT,
             quarter TEXT,
-            category TEXT,
-            subcategory TEXT,
             complaint TEXT,
             reply TEXT
         )
     ''')
+
+    # ✅ CHECK EXISTING COLUMNS
+    c.execute("PRAGMA table_info(complaints)")
+    columns = [col[1] for col in c.fetchall()]
+
+    # ✅ ADD MISSING COLUMNS (MAIN FIX)
+    if "category" not in columns:
+        c.execute("ALTER TABLE complaints ADD COLUMN category TEXT")
+        print("✅ category column added")
+
+    if "subcategory" not in columns:
+        c.execute("ALTER TABLE complaints ADD COLUMN subcategory TEXT")
+        print("✅ subcategory column added")
 
     conn.commit()
     conn.close()
@@ -71,30 +82,12 @@ def send_email(data):
         print("❌ Email error:", str(e))
 
 
-# -------- TEST --------
-@app.route('/test')
-def test():
-    return "✅ WORKING"
-
-
-# -------- CHECK --------
-@app.route('/check')
-def check():
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute("SELECT COUNT(*) FROM complaints")
-    count = c.fetchone()[0]
-    conn.close()
-    return jsonify({"count": count})
-
-
-# -------- LANDING --------
+# -------- ROUTES --------
 @app.route('/')
 def landing():
     return render_template("landing.html")
 
 
-# -------- 🔥 COMPLAINT --------
 @app.route('/complaint', methods=['GET', 'POST'])
 def complaint():
     if request.method == 'POST':
@@ -114,19 +107,16 @@ def complaint():
             subcategory = request.form.get('subcategory')
             complaint_text = request.form.get('complaint')
 
-            print("📌 CATEGORY:", category)
-            print("📌 SUBCATEGORY:", subcategory)
-
             conn = sqlite3.connect(DB_PATH)
             c = conn.cursor()
 
             c.execute("""
                 INSERT INTO complaints 
-                (complaint_id, name, address, contact, email, unit, wo, quarter, category, subcategory, complaint)
+                (complaint_id, name, address, contact, email, unit, wo, quarter, complaint, category, subcategory)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 complaint_id, name, address, contact, email,
-                unit, wo, quarter, category, subcategory, complaint_text
+                unit, wo, quarter, complaint_text, category, subcategory
             ))
 
             conn.commit()
@@ -134,7 +124,6 @@ def complaint():
 
             print("✅ SAVED IN DATABASE")
 
-            # email
             send_email((
                 complaint_id, name, address, contact, email,
                 unit, wo, quarter, category, subcategory, complaint_text
@@ -155,35 +144,6 @@ def complaint():
     return render_template("complaint.html")
 
 
-# -------- TRACK --------
-@app.route('/track', methods=['GET', 'POST'])
-def track():
-    if request.method == 'POST':
-        cid = request.form.get('cid')
-
-        conn = sqlite3.connect(DB_PATH)
-        c = conn.cursor()
-        c.execute("SELECT * FROM complaints WHERE complaint_id=?", (cid,))
-        data = c.fetchone()
-        conn.close()
-
-        return render_template("track.html", data=data)
-
-    return render_template("track.html")
-
-
-# -------- LOGIN --------
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        if request.form.get('username') == "admin" and request.form.get('password') == "1234":
-            session['admin'] = True
-            return redirect('/admin')
-        return "❌ Wrong Username or Password"
-    return render_template("login.html")
-
-
-# -------- ADMIN --------
 @app.route('/admin')
 def admin():
     if not session.get('admin'):
@@ -198,14 +158,22 @@ def admin():
     return render_template("admin.html", data=data)
 
 
-# -------- LOGOUT --------
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        if request.form.get('username') == "admin" and request.form.get('password') == "1234":
+            session['admin'] = True
+            return redirect('/admin')
+        return "❌ Wrong Username or Password"
+    return render_template("login.html")
+
+
 @app.route('/logout')
 def logout():
     session.pop('admin', None)
     return redirect('/login')
 
 
-# -------- REPLY --------
 @app.route('/reply/<cid>', methods=['POST'])
 def reply(cid):
     if not session.get('admin'):
@@ -221,7 +189,6 @@ def reply(cid):
     return redirect('/admin')
 
 
-# -------- RUN --------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
