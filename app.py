@@ -23,7 +23,6 @@ def init_db():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
-    # Create base table (without category first)
     c.execute('''
         CREATE TABLE IF NOT EXISTS complaints (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -36,22 +35,11 @@ def init_db():
             wo TEXT,
             quarter TEXT,
             complaint TEXT,
+            category TEXT,
+            subcategory TEXT,
             reply TEXT
         )
     ''')
-
-    # ✅ CHECK EXISTING COLUMNS
-    c.execute("PRAGMA table_info(complaints)")
-    columns = [col[1] for col in c.fetchall()]
-
-    # ✅ ADD MISSING COLUMNS (MAIN FIX)
-    if "category" not in columns:
-        c.execute("ALTER TABLE complaints ADD COLUMN category TEXT")
-        print("✅ category column added")
-
-    if "subcategory" not in columns:
-        c.execute("ALTER TABLE complaints ADD COLUMN subcategory TEXT")
-        print("✅ subcategory column added")
 
     conn.commit()
     conn.close()
@@ -112,11 +100,11 @@ def complaint():
 
             c.execute("""
                 INSERT INTO complaints 
-                (complaint_id, name, address, contact, email, unit, wo, quarter, complaint, category, subcategory)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                (complaint_id, name, address, contact, email, unit, wo, quarter, complaint, category, subcategory, reply)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 complaint_id, name, address, contact, email,
-                unit, wo, quarter, complaint_text, category, subcategory
+                unit, wo, quarter, complaint_text, category, subcategory, ""
             ))
 
             conn.commit()
@@ -174,19 +162,28 @@ def logout():
     return redirect('/login')
 
 
+# 🔥 FIXED REPLY API (JSON RETURN)
 @app.route('/reply/<cid>', methods=['POST'])
 def reply(cid):
     if not session.get('admin'):
-        return redirect('/login')
+        return jsonify({"status": "error", "message": "Unauthorized"})
 
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute("UPDATE complaints SET reply=? WHERE complaint_id=?",
-              (request.form.get('reply'), cid))
-    conn.commit()
-    conn.close()
+    reply_text = request.form.get('reply')
 
-    return redirect('/admin')
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+
+        c.execute("UPDATE complaints SET reply=? WHERE complaint_id=?",
+                  (reply_text, cid))
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({"status": "success"})
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)})
 
 
 if __name__ == "__main__":
