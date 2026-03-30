@@ -40,12 +40,19 @@
     <div class="card">
         <h3>Select Category</h3>
 
-        <div class="grid">
-            <div class="box">🍽️<br>Ration</div>
-            <div class="box">🏠<br>Accommodation</div>
-            <div class="box">👨‍👩‍👧<br>Welfare</div>
-            <div class="box">🛡️<br>Safety</div>
-        </div>
+        <!-- 🔥 CATEGORY SELECT -->
+        <select id="category" name="category" onchange="updateSubcategory()" required>
+            <option value="">Select Category</option>
+            <option value="ration">Ration</option>
+            <option value="accommodation">Accommodation</option>
+            <option value="welfare">Welfare</option>
+            <option value="safety">Safety</option>
+        </select>
+
+        <!-- 🔥 SUBCATEGORY -->
+        <select id="subcategory" name="subcategory" required>
+            <option value="">Select Issue</option>
+        </select>
     </div>
 
     <!-- DESCRIPTION -->
@@ -70,8 +77,55 @@
 
 </div>
 
-<!-- 🔥 JS FIX (FINAL) -->
+<!-- 🔥 JS START -->
 <script>
+
+// ✅ CATEGORY → SUBCATEGORY LOGIC
+function updateSubcategory() {
+    let category = document.getElementById("category").value;
+    let subcategory = document.getElementById("subcategory");
+
+    let options = {
+        ration: [
+            "Non-availability of ration",
+            "Poor quality",
+            "Delayed supply",
+            "CSD issue"
+        ],
+        accommodation: [
+            "Water supply",
+            "Electricity",
+            "Repairs",
+            "Sanitation issue"
+        ],
+        welfare: [
+            "Family issues",
+            "Financial stress",
+            "Counselling request",
+            "Children education"
+        ],
+        safety: [
+            "Harassment",
+            "Security safety",
+            "Domestic safety",
+            "Neighbour disputes"
+        ]
+    };
+
+    subcategory.innerHTML = "<option value=''>Select Issue</option>";
+
+    if (category in options) {
+        options[category].forEach(function(item) {
+            let opt = document.createElement("option");
+            opt.value = item;
+            opt.text = item;
+            subcategory.appendChild(opt);
+        });
+    }
+}
+
+
+// ✅ FORM SUBMIT
 document.getElementById("complaintForm").addEventListener("submit", function(e) {
     e.preventDefault();
 
@@ -81,21 +135,25 @@ document.getElementById("complaintForm").addEventListener("submit", function(e) 
         method: "POST",
         body: formData
     })
-    .then(response => response.json())   // 🔥 FIX HERE
+    .then(response => response.json())
     .then(data => {
         document.getElementById("alertSound").play();
 
-        // ✅ SHOW COMPLAINT ID
         alert("✅ Complaint Submitted!\nYour ID: " + data.id);
 
         document.getElementById("complaintForm").reset();
+
+        // 🔥 RESET SUBCATEGORY ALSO
+        document.getElementById("subcategory").innerHTML = "<option value=''>Select Issue</option>";
     })
     .catch(error => {
         alert("❌ Error submitting complaint");
         console.error(error);
     });
 });
+
 </script>
+<!-- 🔥 JS END -->
 
 </body>
 </html>

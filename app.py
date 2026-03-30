@@ -10,7 +10,6 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = "secret123"
 
-# ✅ API KEY (safe तरीका भी दिया है नीचे)
 resend.api_key = os.environ.get("RESEND_API_KEY") or "re_M1nePS2H_Mt8QLX8ikfoUUTriHYwdcLeh"
 
 print("🔥 FINAL CODE RUNNING")
@@ -19,6 +18,8 @@ print("🔥 FINAL CODE RUNNING")
 def init_db():
     conn = sqlite3.connect("database.db")
     c = conn.cursor()
+
+    # 🔥 UPDATED TABLE
     c.execute('''
         CREATE TABLE IF NOT EXISTS complaints (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -30,10 +31,13 @@ def init_db():
             unit TEXT,
             wo TEXT,
             quarter TEXT,
+            category TEXT,
+            subcategory TEXT,
             complaint TEXT,
             reply TEXT
         )
     ''')
+
     conn.commit()
     conn.close()
 
@@ -52,13 +56,16 @@ def send_email(data):
                 <p><b>Name:</b> {data[1]}</p>
                 <p><b>Email:</b> {data[4]}</p>
                 <p><b>Contact:</b> {data[3]}</p>
-                <p><b>Complaint:</b><br>{data[8] or "No complaint provided"}</p>
+                <p><b>Category:</b> {data[8]}</p>
+                <p><b>Issue:</b> {data[9]}</p>
+                <p><b>Complaint:</b><br>{data[10] or "No complaint provided"}</p>
             """
         })
         print("✅ Email sent")
 
     except Exception as e:
         print("❌ Email error:", str(e))
+
 
 # -------- TEST --------
 @app.route('/test')
@@ -94,7 +101,7 @@ def check():
 def landing():
     return render_template("landing.html")
 
-# -------- 🔥 COMPLAINT (FIXED JSON RESPONSE) --------
+# -------- 🔥 COMPLAINT --------
 @app.route('/complaint', methods=['GET', 'POST'])
 def complaint():
     if request.method == 'POST':
@@ -110,22 +117,25 @@ def complaint():
                 request.form.get('unit'),
                 request.form.get('wo'),
                 request.form.get('quarter'),
+                request.form.get('category'),      # ✅ NEW
+                request.form.get('subcategory'),   # ✅ NEW
                 request.form.get('complaint')
             )
 
             conn = sqlite3.connect("database.db")
             c = conn.cursor()
+
             c.execute("""
                 INSERT INTO complaints 
-                (complaint_id, name, address, contact, email, unit, wo, quarter, complaint)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                (complaint_id, name, address, contact, email, unit, wo, quarter, category, subcategory, complaint)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, data)
+
             conn.commit()
             conn.close()
 
             send_email(data)
 
-            # ✅ IMPORTANT FIX (AJAX के लिए JSON)
             return jsonify({
                 "status": "success",
                 "id": complaint_id
