@@ -17,19 +17,28 @@
     <th>ID</th>
     <th>Name</th>
     <th>Complaint</th>
+    <th>Category</th>
+    <th>Subcategory</th>
     <th>Reply</th>
 </tr>
 
 {% for row in data %}
 <tr>
-    <td>{{row[1]}}</td>
-    <td>{{row[2]}}</td>
-    <td>{{row[9]}}</td>
+    <td>{{row[1]}}</td> <!-- complaint_id -->
+    <td>{{row[2]}}</td> <!-- name -->
+    <td>{{row[9]}}</td> <!-- complaint -->
+    <td>{{row[10]}}</td> <!-- category -->
+    <td>{{row[11]}}</td> <!-- subcategory -->
+
     <td>
-        <form action="/reply/{{row[1]}}" method="POST">
-            <input name="reply" placeholder="Type reply">
-            <button>Send</button>
-        </form>
+        <!-- Reply input -->
+        <input id="reply_{{row[1]}}" placeholder="Type reply">
+
+        <!-- Send button -->
+        <button onclick="sendReply('{{row[1]}}')">Send</button>
+
+        <!-- Show saved reply -->
+        <p style="color:green;">{{row[12]}}</p>
     </td>
 </tr>
 {% endfor %}
@@ -43,9 +52,38 @@
 <audio id="alertSound" src="/static/alert.mp3"></audio>
 
 <script>
+
+// 🔥 SEND REPLY (NO PAGE REDIRECT)
+function sendReply(id){
+    let reply = document.getElementById("reply_" + id).value;
+
+    if(!reply){
+        alert("Enter reply first");
+        return;
+    }
+
+    fetch("/reply/" + id, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: "reply=" + encodeURIComponent(reply)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.status === "success"){
+            alert("✅ Reply Sent");
+            location.reload();
+        } else {
+            alert("❌ Error sending reply");
+        }
+    });
+}
+
+
+// 🔊 AUTO NEW COMPLAINT ALERT
 let lastCount = {{ data|length }};
 
-// 🧠 Check new complaints (no full reload)
 setInterval(() => {
     fetch('/check')
     .then(res => res.json())
@@ -54,10 +92,8 @@ setInterval(() => {
         if (res.count > lastCount) {
             console.log("New complaint आया!");
 
-            // 🔊 Play sound
             document.getElementById("alertSound").play();
 
-            // 🔄 Reload only when new data
             setTimeout(() => {
                 location.reload();
             }, 1000);
@@ -65,6 +101,7 @@ setInterval(() => {
 
     });
 }, 5000);
+
 </script>
 
 </body>
