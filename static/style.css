@@ -1,6 +1,6 @@
 body {
     font-family: 'Segoe UI', sans-serif;
-    background: #eef2ee; /* softer greenish background */
+    background: #eef2ee;
     margin: 0;
 }
 
@@ -97,6 +97,41 @@ h2, h3 {
     transform: scale(1.05);
 }
 
+/* 🔥 ACTIVE CATEGORY (NEW) */
+.box.active {
+    background: #dbeedd;
+    border: 2px solid #2f4f3f;
+    transform: scale(1.05);
+}
+
+/* 🔥 SUBCATEGORY BOX */
+.subcategory-box {
+    margin-top: 15px;
+}
+
+/* 🔥 SUB OPTIONS */
+.sub-option {
+    padding: 12px;
+    margin: 8px 0;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    cursor: pointer;
+    background: #f9f9f9;
+    transition: 0.2s;
+}
+
+/* hover effect */
+.sub-option:hover {
+    background: #eaeaea;
+}
+
+/* selected option */
+.sub-option.active {
+    background: #cce5ff;
+    border: 1px solid #007bff;
+    font-weight: 500;
+}
+
 /* AUDIO BUTTONS */
 .audio-controls {
     margin-top: 10px;
@@ -159,4 +194,15 @@ h2, h3 {
 button {
     border: none;
     cursor: pointer;
+}
+
+/* 🔥 MOBILE RESPONSIVE (BONUS) */
+@media (max-width: 768px) {
+    .container {
+        width: 90%;
+    }
+
+    .grid {
+        grid-template-columns: 1fr;
+    }
 }

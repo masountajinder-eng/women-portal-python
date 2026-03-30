@@ -19,7 +19,6 @@
     <!-- 🔊 ALERT SOUND -->
     <audio id="alertSound" src="/static/alert.mp3"></audio>
 
-    <!-- 🔥 FORM START -->
     <form id="complaintForm">
 
     <!-- BASIC DETAILS -->
@@ -40,19 +39,19 @@
     <div class="card">
         <h3>Select Category</h3>
 
-        <!-- 🔥 CATEGORY SELECT -->
-        <select id="category" name="category" onchange="updateSubcategory()" required>
-            <option value="">Select Category</option>
-            <option value="ration">Ration</option>
-            <option value="accommodation">Accommodation</option>
-            <option value="welfare">Welfare</option>
-            <option value="safety">Safety</option>
-        </select>
+        <div class="grid">
+            <div class="box" onclick="selectCategory(event,'ration')">🍽️<br>Ration</div>
+            <div class="box" onclick="selectCategory(event,'accommodation')">🏠<br>Accommodation</div>
+            <div class="box" onclick="selectCategory(event,'welfare')">👨‍👩‍👧<br>Welfare</div>
+            <div class="box" onclick="selectCategory(event,'safety')">🛡️<br>Safety</div>
+        </div>
 
-        <!-- 🔥 SUBCATEGORY -->
-        <select id="subcategory" name="subcategory" required>
-            <option value="">Select Issue</option>
-        </select>
+        <!-- hidden fields -->
+        <input type="hidden" name="category" id="category">
+        <input type="hidden" name="subcategory" id="subcategory">
+
+        <!-- options -->
+        <div id="subcategoryBox" class="subcategory-box"></div>
     </div>
 
     <!-- DESCRIPTION -->
@@ -69,63 +68,70 @@
 
     <button type="button" class="emergency">🚨 Emergency</button>
 
-    <!-- ✅ SUBMIT -->
     <button type="submit" class="submit">Submit</button>
 
     </form>
-    <!-- 🔥 FORM END -->
 
 </div>
 
-<!-- 🔥 JS START -->
 <script>
 
-// ✅ CATEGORY → SUBCATEGORY LOGIC
-function updateSubcategory() {
-    let category = document.getElementById("category").value;
-    let subcategory = document.getElementById("subcategory");
+let options = {
+    ration: [
+        "Non-availability of ration",
+        "Poor quality",
+        "Delayed supply",
+        "CSD issue"
+    ],
+    accommodation: [
+        "Water supply",
+        "Electricity",
+        "Repairs",
+        "Sanitation issue"
+    ],
+    welfare: [
+        "Family issues",
+        "Financial stress",
+        "Counselling request",
+        "Children education"
+    ],
+    safety: [
+        "Harassment",
+        "Security safety",
+        "Domestic safety",
+        "Neighbour disputes"
+    ]
+};
 
-    let options = {
-        ration: [
-            "Non-availability of ration",
-            "Poor quality",
-            "Delayed supply",
-            "CSD issue"
-        ],
-        accommodation: [
-            "Water supply",
-            "Electricity",
-            "Repairs",
-            "Sanitation issue"
-        ],
-        welfare: [
-            "Family issues",
-            "Financial stress",
-            "Counselling request",
-            "Children education"
-        ],
-        safety: [
-            "Harassment",
-            "Security safety",
-            "Domestic safety",
-            "Neighbour disputes"
-        ]
-    };
+function selectCategory(e, cat) {
 
-    subcategory.innerHTML = "<option value=''>Select Issue</option>";
+    // set category value
+    document.getElementById("category").value = cat;
 
-    if (category in options) {
-        options[category].forEach(function(item) {
-            let opt = document.createElement("option");
-            opt.value = item;
-            opt.text = item;
-            subcategory.appendChild(opt);
-        });
-    }
+    // highlight selected card
+    document.querySelectorAll(".box").forEach(el => el.classList.remove("active"));
+    e.currentTarget.classList.add("active");
+
+    // show options
+    let box = document.getElementById("subcategoryBox");
+    box.innerHTML = "";
+
+    options[cat].forEach(item => {
+        let div = document.createElement("div");
+        div.className = "sub-option";
+        div.innerText = item;
+
+        div.onclick = function () {
+            document.querySelectorAll(".sub-option").forEach(el => el.classList.remove("active"));
+            div.classList.add("active");
+            document.getElementById("subcategory").value = item;
+        };
+
+        box.appendChild(div);
+    });
 }
 
-
-// ✅ FORM SUBMIT
+// submit
 document.getElementById("complaintForm").addEventListener("submit", function(e) {
     e.preventDefault();
 
@@ -138,13 +144,13 @@ document.getElementById("complaintForm").addEventListener("submit", function(e) 
     .then(response => response.json())
     .then(data => {
         document.getElementById("alertSound").play();
-
         alert("✅ Complaint Submitted!\nYour ID: " + data.id);
 
-        document.getElementById("complaintForm").reset();
+        this.reset();
+        document.getElementById("subcategoryBox").innerHTML = "";
 
-        // 🔥 RESET SUBCATEGORY ALSO
-        document.getElementById("subcategory").innerHTML = "<option value=''>Select Issue</option>";
+        // remove active states
+        document.querySelectorAll(".box").forEach(el => el.classList.remove("active"));
     })
     .catch(error => {
         alert("❌ Error submitting complaint");
@@ -153,7 +159,6 @@ document.getElementById("complaintForm").addEventListener("submit", function(e) 
 });
 
 </script>
-<!-- 🔥 JS END -->
 
 </body>
 </html>
