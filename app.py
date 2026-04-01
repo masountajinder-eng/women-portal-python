@@ -221,8 +221,8 @@ def check():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
+        username = request.form.get('admin')
+        password = request.form.get('1234')
 
         if username == ADMIN_USER and password == ADMIN_PASS:
             session['admin'] = True
