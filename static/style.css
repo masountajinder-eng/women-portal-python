@@ -3,6 +3,7 @@ body {
     background: #eef2ee;
     margin: 0;
     position: relative;
+    z-index: 1;
 }
 
 /* 🔥 WATERMARK LOGO (237) */
@@ -11,20 +12,21 @@ body::before {
     position: fixed;
     top: 50%;
     left: 50%;
-    width: 600px;
-    height: 600px;
-    background-image: url("/static/images/237.png"); /* 👈 path check kar lena */
+    width: 500px;
+    height: 500px;
+
+    background-image: url("/static/237.png"); /* ✅ SAFE PATH */
     background-repeat: no-repeat;
     background-size: contain;
+    background-position: center;
 
-    opacity: 0.05;  /* 👈 watermark light effect */
+    opacity: 0.06;
 
     transform: translate(-50%, -50%) rotate(-15deg);
 
-    z-index: -1;
+    z-index: 0;  /* 🔥 FIXED */
     pointer-events: none;
 }
-
 
 /* NAVBAR */
 .navbar {
@@ -41,6 +43,8 @@ body::before {
     width: 65%;
     margin: auto;
     margin-top: 30px;
+    position: relative;
+    z-index: 2; /* 🔥 content always above watermark */
 }
 
 /* CARD */
@@ -50,6 +54,8 @@ body::before {
     border-radius: 15px;
     box-shadow: 0px 6px 18px rgba(0,0,0,0.08);
     margin-bottom: 20px;
+    position: relative;
+    z-index: 2;
 }
 
 /* INPUTS */
@@ -228,7 +234,8 @@ button {
 
     /* smaller watermark on mobile */
     body::before {
-        width: 300px;
-        height: 300px;
+        width: 250px;
+        height: 250px;
+        opacity: 0.04;
     }
 }
