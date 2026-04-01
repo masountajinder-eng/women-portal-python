@@ -2,7 +2,29 @@ body {
     font-family: 'Segoe UI', sans-serif;
     background: #eef2ee;
     margin: 0;
+    position: relative;
 }
+
+/* 🔥 WATERMARK LOGO (237) */
+body::before {
+    content: "";
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 600px;
+    height: 600px;
+    background-image: url("/static/images/237.png"); /* 👈 path check kar lena */
+    background-repeat: no-repeat;
+    background-size: contain;
+
+    opacity: 0.05;  /* 👈 watermark light effect */
+
+    transform: translate(-50%, -50%) rotate(-15deg);
+
+    z-index: -1;
+    pointer-events: none;
+}
+
 
 /* NAVBAR */
 .navbar {
@@ -97,19 +119,19 @@ h2, h3 {
     transform: scale(1.05);
 }
 
-/* 🔥 ACTIVE CATEGORY (NEW) */
+/* ACTIVE CATEGORY */
 .box.active {
     background: #dbeedd;
     border: 2px solid #2f4f3f;
     transform: scale(1.05);
 }
 
-/* 🔥 SUBCATEGORY BOX */
+/* SUBCATEGORY BOX */
 .subcategory-box {
     margin-top: 15px;
 }
 
-/* 🔥 SUB OPTIONS */
+/* SUB OPTIONS */
 .sub-option {
     padding: 12px;
     margin: 8px 0;
@@ -120,12 +142,10 @@ h2, h3 {
     transition: 0.2s;
 }
 
-/* hover effect */
 .sub-option:hover {
     background: #eaeaea;
 }
 
-/* selected option */
 .sub-option.active {
     background: #cce5ff;
     border: 1px solid #007bff;
@@ -196,7 +216,7 @@ button {
     cursor: pointer;
 }
 
-/* 🔥 MOBILE RESPONSIVE (BONUS) */
+/* MOBILE RESPONSIVE */
 @media (max-width: 768px) {
     .container {
         width: 90%;
@@ -204,5 +224,11 @@ button {
 
     .grid {
         grid-template-columns: 1fr;
+    }
+
+    /* smaller watermark on mobile */
+    body::before {
+        width: 300px;
+        height: 300px;
     }
 }
