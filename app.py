@@ -12,7 +12,7 @@ load_dotenv()
 app = Flask(__name__, static_folder='static', static_url_path='/static')
 app.secret_key = "secret123"
 
-# ✅ FORCE STATIC SERVE (IMPORTANT FOR RENDER)
+# ✅ FORCE STATIC SERVE
 @app.route('/static/<path:filename>')
 def serve_static(filename):
     return app.send_static_file(filename)
@@ -21,7 +21,7 @@ resend.api_key = os.environ.get("RESEND_API_KEY")
 
 print("🔥 FINAL ULTRA PRO CODE RUNNING")
 
-# ✅ ADMIN LOGIN (FIXED)
+# ✅ ADMIN LOGIN
 ADMIN_USER = "admin"
 ADMIN_PASS = "1234"
 
@@ -61,12 +61,31 @@ def init_db():
 
 init_db()
 
-# -------- EMAIL --------
+# -------- EMAIL (UPDATED WITH ATTACHMENT) --------
 def send_email(data, audio_link=None):
     try:
+        attachments = []
         audio_html = ""
+
         if audio_link:
             audio_html = f'<p><b>Audio:</b> <a href="{audio_link}">Listen</a></p>'
+
+            try:
+                # Convert URL path → actual file path
+                file_path = audio_link.replace("/static/", "static/")
+
+                with open(file_path, "rb") as f:
+                    file_content = f.read()
+
+                    attachments.append({
+                        "filename": os.path.basename(file_path),
+                        "content": base64.b64encode(file_content).decode("utf-8")
+                    })
+
+                print("✅ Audio attached")
+
+            except Exception as e:
+                print("❌ Audio attach error:", str(e))
 
         resend.Emails.send({
             "from": "onboarding@resend.dev",
@@ -82,10 +101,11 @@ def send_email(data, audio_link=None):
                 <p><b>Subcategory:</b> {data[9]}</p>
                 <p><b>Complaint:</b><br>{data[10]}</p>
                 {audio_html}
-            """
+            """,
+            "attachments": attachments   # 🔥 AUDIO ATTACH HERE
         })
 
-        print("✅ Email sent")
+        print("✅ Email + Audio Attachment Sent")
 
     except Exception as e:
         print("❌ Email error:", str(e))
@@ -98,7 +118,6 @@ def landing():
     return render_template("landing.html")
 
 
-# ✅ COMPLAINT SUBMIT
 @app.route('/complaint', methods=['GET', 'POST'])
 def complaint():
     if request.method == 'POST':
@@ -152,6 +171,7 @@ def complaint():
             conn.commit()
             conn.close()
 
+            # 📧 SEND EMAIL WITH AUDIO
             send_email((
                 complaint_id, name, address, contact, email,
                 unit, wo, quarter, category, subcategory, complaint_text
@@ -171,7 +191,6 @@ def complaint():
     return render_template("complaint.html")
 
 
-# ✅ TRACK SYSTEM
 @app.route('/track', methods=['GET', 'POST'])
 def track():
     data = None
@@ -190,7 +209,6 @@ def track():
     return render_template("track.html", data=data)
 
 
-# ✅ ADMIN PANEL
 @app.route('/admin')
 def admin():
     if not session.get('admin'):
@@ -205,7 +223,6 @@ def admin():
     return render_template("admin.html", data=data)
 
 
-# ✅ CHECK COUNT
 @app.route('/check')
 def check():
     conn = sqlite3.connect(DB_PATH)
@@ -217,7 +234,6 @@ def check():
     return jsonify({"count": count})
 
 
-# ✅ LOGIN (FINAL FIXED)
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -239,7 +255,6 @@ def logout():
     return redirect('/login')
 
 
-# ✅ REPLY
 @app.route('/reply/<cid>', methods=['POST'])
 def reply(cid):
     if not session.get('admin'):
@@ -263,7 +278,6 @@ def reply(cid):
         return jsonify({"status": "error", "message": str(e)})
 
 
-# ✅ DELETE
 @app.route('/delete/<cid>', methods=['POST'])
 def delete(cid):
     if not session.get('admin'):
