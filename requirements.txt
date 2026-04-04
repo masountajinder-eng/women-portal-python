@@ -1,4 +1,5 @@
 flask
-resend
-python-dotenv
 gunicorn
+python-dotenv
+resend
+openpyxl
