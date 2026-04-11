@@ -14,6 +14,9 @@ app.secret_key = "secret123"
 
 resend.api_key = os.environ.get("RESEND_API_KEY")
 
+# ✅ NEW: Admin Email from ENV (fallback bhi diya hai)
+ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "237engrregt@gmail.com")
+
 print("🔥 FINAL ULTRA PRO CODE RUNNING")
 
 # 🔐 ADMIN LOGIN
@@ -23,7 +26,7 @@ ADMIN_PASS = "1234"
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "database.db")
 
-# 🔥 AUDIO FOLDER (NEW)
+# 🔥 AUDIO FOLDER
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "audio_files")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
@@ -56,7 +59,7 @@ def init_db():
 
 init_db()
 
-# -------- AUDIO ROUTE (🔥 MAIN FIX) --------
+# -------- AUDIO ROUTE --------
 @app.route('/audio/<filename>')
 def get_audio(filename):
     return send_from_directory(UPLOAD_FOLDER, filename)
@@ -76,7 +79,7 @@ def send_email(data, audio_link=None):
 
         resend.Emails.send({
             "from": "onboarding@resend.dev",
-            "to": ["masountajinder@gmail.com"],
+            "to": [ADMIN_EMAIL],   # ✅ yahan change kiya (dynamic)
             "subject": f"🚨 Complaint {data[0]}",
             "html": f"""
                 <h2>New Complaint</h2>
@@ -89,7 +92,7 @@ def send_email(data, audio_link=None):
             """
         })
 
-        print("✅ Email Sent")
+        print("✅ Email Sent to:", ADMIN_EMAIL)
 
     except Exception as e:
         print("❌ Email error:", str(e))
