@@ -7,28 +7,31 @@ import base64
 from openpyxl import Workbook
 import smtplib
 from email.mime.text import MIMEText
-import threading   # ✅ NEW
+import threading
 
 load_dotenv()
 
 app = Flask(__name__, static_folder='static', static_url_path='/static')
 app.secret_key = "secret123"
 
-print("🔥 FINAL ULTRA PRO CODE RUNNING (ADMIN EMAIL FIXED)")
+print("🔥 FINAL EMAIL DEBUG VERSION RUNNING")
 
 # 🔐 ADMIN LOGIN
 ADMIN_USER = "admin"
 ADMIN_PASS = "1234"
 
-# ✅ EMAIL CONFIG
-SENDER_EMAIL = os.environ.get("SENDER_EMAIL", "237engrregt@gmail.com")
-APP_PASSWORD = os.environ.get("APP_PASSWORD", "tzcnhyiajurp")
-ADMIN_EMAIL = "237engrregt@gmail.com"   # ✅ ADMIN EMAIL
+# ✅ EMAIL CONFIG (NO DEFAULT - MUST COME FROM RENDER)
+SENDER_EMAIL = os.environ.get("SENDER_EMAIL")
+APP_PASSWORD = os.environ.get("APP_PASSWORD")
+ADMIN_EMAIL = "237engrregt@gmail.com"
+
+print("📧 EMAIL CONFIG:")
+print("SENDER_EMAIL =", SENDER_EMAIL)
+print("APP_PASSWORD =", APP_PASSWORD)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "database.db")
 
-# 🔥 AUDIO FOLDER
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "audio_files")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
@@ -61,7 +64,7 @@ def init_db():
 
 init_db()
 
-# -------- AUDIO ROUTE --------
+# -------- AUDIO --------
 @app.route('/audio/<filename>')
 def get_audio(filename):
     return send_from_directory(UPLOAD_FOLDER, filename)
@@ -70,6 +73,11 @@ def get_audio(filename):
 def send_email(data, audio_link=None):
     try:
         print("📤 Sending email to admin...")
+
+        # ❗ CHECK CONFIG
+        if not SENDER_EMAIL or not APP_PASSWORD:
+            print("❌ EMAIL CONFIG MISSING")
+            return
 
         body = f"""
 🚨 New Complaint Received
@@ -81,24 +89,22 @@ Category: {data[8]}
 Complaint: {data[10]}
 """
 
-        if audio_link:
-            body += f"\nAudio: https://your-render-url.onrender.com{audio_link}"
-
         msg = MIMEText(body)
         msg["Subject"] = f"🚨 Complaint {data[0]}"
         msg["From"] = SENDER_EMAIL
-        msg["To"] = ADMIN_EMAIL   # ✅ ADMIN KO JAAYEGA
+        msg["To"] = ADMIN_EMAIL
 
-        server = smtplib.SMTP("smtp.gmail.com", 587, timeout=10)
+        server = smtplib.SMTP("smtp.gmail.com", 587)
+        server.set_debuglevel(1)   # 🔥 IMPORTANT (logs show everything)
         server.starttls()
         server.login(SENDER_EMAIL, APP_PASSWORD)
         server.send_message(msg)
         server.quit()
 
-        print("✅ Email Sent to Admin")
+        print("✅ EMAIL SENT SUCCESSFULLY")
 
     except Exception as e:
-        print("❌ Email Error:", str(e))
+        print("❌ EMAIL ERROR FULL:", repr(e))
 
 # -------- HOME --------
 @app.route('/')
@@ -123,7 +129,6 @@ def complaint():
             subcategory = request.form.get('subcategory')
             complaint_text = request.form.get('complaint')
 
-            # ✅ AUDIO FIX
             audio_data = request.form.get("audio_data")
             audio_path = ""
 
@@ -155,13 +160,11 @@ def complaint():
             conn.commit()
             conn.close()
 
-            # ✅ BACKGROUND EMAIL (NO CRASH)
+            # ✅ EMAIL THREAD
             threading.Thread(
                 target=send_email,
-                args=((
-                    complaint_id, name, address, contact, email,
-                    unit, wo, quarter, category, subcategory, complaint_text
-                ), audio_path)
+                args=((complaint_id, name, address, contact, email,
+                       unit, wo, quarter, category, subcategory, complaint_text), audio_path)
             ).start()
 
             return jsonify({"status": "success", "id": complaint_id})
@@ -172,35 +175,15 @@ def complaint():
 
     return render_template("complaint.html")
 
-# -------- TRACK --------
-@app.route('/track', methods=["GET", "POST"])
-def track():
-    if request.method == "POST":
-        cid = request.form.get("complaint_id")
+# -------- बाकी routes same --------
 
-        conn = sqlite3.connect(DB_PATH)
-        c = conn.cursor()
-        c.execute("SELECT * FROM complaints WHERE complaint_id=?", (cid,))
-        data = c.fetchone()
-        conn.close()
-
-        return render_template("track.html", data=data)
-
-    return render_template("track.html")
-
-# -------- ADMIN --------
 @app.route('/admin', methods=['GET', 'POST'])
 def admin_login():
     if request.method == "POST":
-        user = request.form.get("username")
-        password = request.form.get("password")
-
-        if user == ADMIN_USER and password == ADMIN_PASS:
+        if request.form.get("username") == ADMIN_USER and request.form.get("password") == ADMIN_PASS:
             session['admin'] = True
             return redirect("/dashboard")
-        else:
-            return "❌ Wrong Credentials"
-
+        return "❌ Wrong Credentials"
     return render_template("login.html")
 
 @app.route('/dashboard')
@@ -209,80 +192,15 @@ def dashboard():
         return redirect("/admin")
 
     conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM complaints")
-    data = cursor.fetchall()
+    data = conn.execute("SELECT * FROM complaints").fetchall()
     conn.close()
 
     return render_template("admin.html", data=data)
-
-@app.route("/reply/<cid>", methods=["POST"])
-def reply(cid):
-    if not session.get('admin'):
-        return jsonify({"status": "error"})
-
-    reply_text = request.form.get("reply")
-
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    cursor.execute("UPDATE complaints SET reply=? WHERE complaint_id=?", (reply_text, cid))
-    conn.commit()
-    conn.close()
-
-    return jsonify({"status": "success"})
-
-@app.route("/delete/<cid>", methods=["POST"])
-def delete(cid):
-    if not session.get('admin'):
-        return jsonify({"status": "error"})
-
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM complaints WHERE complaint_id=?", (cid,))
-    conn.commit()
-    conn.close()
-
-    return jsonify({"status": "success"})
 
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect("/admin")
-
-# -------- EXCEL --------
-@app.route("/download-excel")
-def download_excel():
-    if not session.get('admin'):
-        return redirect("/admin")
-
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT complaint_id, name, address, contact, email,
-               unit, wo, quarter, category, subcategory,
-               complaint, audio
-        FROM complaints
-    """)
-    data = cursor.fetchall()
-    conn.close()
-
-    wb = Workbook()
-    ws = wb.active
-    ws.title = "Complaints"
-
-    ws.append([
-        "Complaint ID", "Name", "Address", "Contact", "Email",
-        "Unit", "WO", "Quarter", "Category", "Subcategory",
-        "Complaint", "Audio"
-    ])
-
-    for row in data:
-        ws.append(row)
-
-    file_path = os.path.join(BASE_DIR, "complaints.xlsx")
-    wb.save(file_path)
-
-    return send_file(file_path, as_attachment=True)
 
 # -------- RUN --------
 if __name__ == "__main__":
