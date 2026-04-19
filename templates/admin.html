@@ -10,16 +10,13 @@
 <div class="navbar">Admin Panel</div>
 
 <div class="container">
-
 <div class="card">
 
 <!-- 🔥 TOP ACTION BAR -->
 <div style="margin-bottom:15px; display:flex; justify-content:space-between; align-items:center;">
-
     <h3>All Complaints</h3>
 
     <div>
-        <!-- ✅ FIXED DOWNLOAD BUTTON -->
         <a href="/download">
             <button style="padding:10px 15px; background:green; color:white; border:none;">
                 📥 Download Excel
@@ -32,7 +29,6 @@
             </button>
         </a>
     </div>
-
 </div>
 
 <table border="1" width="100%" cellpadding="10">
@@ -48,19 +44,19 @@
 </tr>
 
 {% for row in data %}
-<tr id="row_{{row[1]}}">
+<tr id="row_{{row.complaint_id}}">
 
-    <td>{{row[1]}}</td>
-    <td>{{row[2]}}</td>
-    <td>{{row[9]}}</td>
-    <td>{{row[10]}}</td>
-    <td>{{row[11]}}</td>
+    <td>{{row.complaint_id}}</td>
+    <td>{{row.name}}</td>
+    <td>{{row.complaint}}</td>
+    <td>{{row.category}}</td>
+    <td>{{row.subcategory}}</td>
 
     <!-- 🎧 AUDIO -->
     <td>
-        {% if row[13] %}
+        {% if row.audio %}
             <audio controls style="width:150px;">
-                <source src="{{row[13]}}" type="audio/webm">
+                <source src="{{row.audio}}" type="audio/webm">
             </audio>
         {% else %}
             <span style="color:gray;">No Audio</span>
@@ -69,21 +65,21 @@
 
     <!-- 💬 REPLY -->
     <td>
-        <input id="reply_{{row[1]}}" placeholder="Type reply" style="width:120px;">
+        <input id="reply_{{row.complaint_id}}" placeholder="Type reply" style="width:120px;">
 
-        <button onclick="sendReply('{{row[1]}}')" 
+        <button onclick="sendReply('{{row.complaint_id}}')" 
         style="background:blue;color:white;">
             Send
         </button>
 
         <p style="color:green; margin-top:5px;">
-            {{row[12]}}
+            {{row.reply}}
         </p>
     </td>
 
     <!-- 🗑️ DELETE -->
     <td>
-        <button onclick="deleteComplaint('{{row[1]}}')" 
+        <button onclick="deleteComplaint('{{row.complaint_id}}')" 
         style="background:red;color:white;">
             Delete
         </button>
@@ -146,25 +142,6 @@ function deleteComplaint(id){
         }
     });
 }
-
-// 🔔 AUTO ALERT SYSTEM
-let lastCount = {{ data|length }};
-
-setInterval(() => {
-    fetch('/check')
-    .then(res => res.json())
-    .then(res => {
-
-        if (res.count > lastCount) {
-            document.getElementById("alertSound").play();
-
-            setTimeout(() => {
-                location.reload();
-            }, 1000);
-        }
-
-    });
-}, 5000);
 
 </script>
 
