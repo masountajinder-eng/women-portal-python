@@ -1,0 +1,196 @@
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #eef2ee;
+    margin: 0;
+    position: relative;
+    z-index: 1;
+}
+
+/* 🔥 WATERMARK LOGO */
+body::before {
+    content: "";
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 500px;
+    height: 500px;
+    background-image: url("/static/237.png");
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-position: center;
+    opacity: 0.05;
+    transform: translate(-50%, -50%) rotate(-15deg);
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* NAVBAR */
+.navbar {
+    background: #2f4f3f;
+    color: white;
+    padding: 20px;
+    font-size: 26px;
+    font-weight: bold;
+    text-align: center;
+}
+
+/* CONTAINER */
+.container {
+    width: 65%;
+    margin: auto;
+    margin-top: 30px;
+    position: relative;
+    z-index: 2;
+}
+
+/* NOTICE BOX */
+.note {
+    background: #dce8dc;
+    padding: 14px;
+    border-radius: 12px;
+    text-align: center;
+    margin-bottom: 20px;
+    border: 1px solid #cddccc;
+    font-size: 14px;
+}
+
+/* CARD */
+.card {
+    background: #ffffff;
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0px 6px 18px rgba(0,0,0,0.08);
+    margin-bottom: 20px;
+}
+
+/* INPUT */
+input, textarea {
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+    border-radius: 10px;
+    border: 1px solid #dcdcdc;
+    font-size: 14px;
+    background: #f8f8f8;
+}
+
+textarea {
+    height: 110px;
+}
+
+/* HEADINGS */
+.subtitle {
+    text-align: center;
+    color: #5a6d5f;
+    margin-bottom: 10px;
+}
+
+h3 {
+    color: #2f4f3f;
+}
+
+/* CATEGORY GRID */
+.grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-top: 10px;
+}
+
+/* CATEGORY BOX */
+.box {
+    background: #f5f5f5;
+    padding: 30px;
+    border-radius: 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: 0.3s;
+    font-size: 16px;
+    border: 1px solid #ddd;
+}
+
+.box:hover {
+    background: #e6efe6;
+    transform: scale(1.05);
+}
+
+/* ACTIVE CATEGORY */
+.box.active {
+    background: #dbeedd;
+    border: 2px solid #2f4f3f;
+}
+
+/* AUDIO BUTTONS */
+button[type="button"] {
+    margin-top: 10px;
+}
+
+.record {
+    background: #2e7d32;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 8px;
+}
+
+.stop {
+    background: #c62828;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 8px;
+}
+
+/* 🎤 BUTTON STYLE */
+button {
+    border: none;
+    cursor: pointer;
+}
+
+/* 🚨 EMERGENCY BUTTON (PERFECT CENTER LIKE SCREENSHOT) */
+.emergency-btn {
+    width: 100%;
+    background: #c94c4c;
+    color: white;
+    padding: 16px;
+    border-radius: 12px;
+    font-size: 16px;
+    margin-top: 15px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.emergency-btn:hover {
+    background: #a83232;
+}
+
+/* SUBMIT BUTTON */
+.submit {
+    width: 100%;
+    background: #2f4f3f;
+    color: white;
+    padding: 16px;
+    border-radius: 12px;
+    font-size: 16px;
+    margin-top: 10px;
+    cursor: pointer;
+}
+
+.submit:hover {
+    background: #1f3529;
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+    .container {
+        width: 90%;
+    }
+
+    .grid {
+        grid-template-columns: 1fr;
+    }
+
+    body::before {
+        width: 250px;
+        height: 250px;
+        opacity: 0.04;
+    }
+}
