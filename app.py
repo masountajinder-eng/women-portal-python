@@ -8,6 +8,9 @@ from threading import Lock
 from datetime import datetime
 import smtplib
 from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+from email import encoders
 
 # ================= INIT =================
 load_dotenv()
@@ -15,7 +18,7 @@ load_dotenv()
 app = Flask(__name__, static_folder='static', template_folder='templates')
 app.secret_key = os.getenv("SECRET_KEY", "secret123")
 
-print("🔥 FINAL SYSTEM WITH EMAIL ALERT RUNNING")
+print("🔥 FINAL SYSTEM WITH EMAIL + AUDIO ALERT RUNNING")
 
 # ================= EMAIL CONFIG =================
 SMTP_USER = os.getenv("SMTP_USER")
@@ -29,8 +32,17 @@ def send_alert_email(data):
             print("❌ SMTP CONFIG MISSING")
             return
 
-        msg = MIMEText(f"""
-🚨 NEW COMPLAINT RECEIVED 🚨
+        msg = MIMEMultipart()
+
+        msg['Subject'] = "🚨 237 Engr Regt - New Complaint Alert"
+        msg['From'] = SMTP_USER
+        msg['To'] = SMTP_USER
+
+        # 📌 BODY
+        body = f"""
+🚨 237 Engr Regt 🚨
+
+New Complaint Received
 
 Complaint ID: {data['complaint_id']}
 Name: {data['name']}
@@ -40,25 +52,38 @@ Subcategory: {data['subcategory']}
 
 Complaint:
 {data['complaint']}
-        """)
+        """
 
-        msg['Subject'] = "🚨 New Complaint Alert"
-        msg['From'] = SMTP_USER
-        msg['To'] = SMTP_USER
+        msg.attach(MIMEText(body, 'plain'))
 
+        # 🎤 AUDIO ATTACHMENT
+        if data.get("audio") and os.path.exists(data["audio"]):
+            with open(data["audio"], "rb") as f:
+                part = MIMEBase('application', 'octet-stream')
+                part.set_payload(f.read())
+                encoders.encode_base64(part)
+
+                part.add_header(
+                    'Content-Disposition',
+                    f'attachment; filename={os.path.basename(data["audio"])}'
+                )
+
+                msg.attach(part)
+
+        # 📤 SEND EMAIL
         server = smtplib.SMTP("smtp.gmail.com", 587)
         server.starttls()
         server.login(SMTP_USER, SMTP_PASS)
         server.send_message(msg)
         server.quit()
 
-        print("✅ EMAIL SENT SUCCESSFULLY")
+        print("✅ EMAIL SENT WITH AUDIO")
 
     except Exception as e:
         print("❌ EMAIL ERROR:", e)
 
 
-# ================= PATH (FIXED FOR RENDER) =================
+# ================= PATH =================
 UPLOAD_FOLDER = "/tmp/audio_files"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
@@ -153,7 +178,7 @@ def complaint():
             # ✅ SAVE
             save_to_excel(data)
 
-            # 🔥 EMAIL ALERT (IMPORTANT)
+            # 🔥 EMAIL ALERT WITH AUDIO
             send_alert_email(data)
 
             return jsonify({"status": "success", "id": complaint_id})
@@ -163,40 +188,6 @@ def complaint():
             return jsonify({"status": "error", "message": str(e)})
 
     return render_template("complaint.html")
-
-
-# ✅ TRACK
-@app.route('/track', methods=['GET', 'POST'])
-def track():
-    data = None
-
-    if request.method == 'POST':
-        cid = request.form.get("complaint_id")
-
-        wb = load_workbook(EXCEL_FILE)
-        ws = wb.active
-
-        for row in ws.iter_rows(min_row=2, values_only=True):
-            if str(row[1]) == cid:
-                data = row
-                break
-
-    return render_template("track.html", data=data)
-
-
-# ✅ ADMIN
-@app.route('/admin')
-def admin():
-    wb = load_workbook(EXCEL_FILE)
-    ws = wb.active
-    data = list(ws.values)
-    return render_template("admin.html", data=data)
-
-
-# ✅ DOWNLOAD
-@app.route("/download_excel")
-def download_excel():
-    return send_file(EXCEL_FILE, as_attachment=True)
 
 
 # ================= RUN =================
