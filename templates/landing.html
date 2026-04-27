@@ -1,4 +1,83 @@
-<link rel="stylesheet" href="/static/style.css">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Women Complaint Portal</title>
+    <link rel="stylesheet" href="/static/style.css">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #eef2ef;
+        }
+
+        .navbar {
+            background: #2e5d46;
+            color: white;
+            text-align: center;
+            padding: 18px;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            margin-top: 80px;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            width: 400px;
+            text-align: center;
+            box-shadow: 0px 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .card h2 {
+            margin-bottom: 10px;
+        }
+
+        .card p {
+            color: #555;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .submit-btn {
+            background: #2e5d46;
+            color: white;
+        }
+
+        .track-btn {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .admin-btn {
+            background: #444;
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+
+<body>
 
 <div class="navbar">Women Complaint Portal</div>
 
@@ -7,8 +86,21 @@
         <h2>Welcome</h2>
         <p>Submit and track your complaints easily.</p>
 
-        <a href="/complaint"><button>Submit Complaint</button></a>
-        <a href="/track"><button>Track Complaint</button></a>
-        <a href="/admin"><button>Admin Panel</button></a>
+        <!-- ✅ IMPORTANT -->
+        <a href="/complaint">
+            <button class="btn submit-btn">Submit Complaint</button>
+        </a>
+
+        <a href="/track">
+            <button class="btn track-btn">Track Complaint</button>
+        </a>
+
+        <a href="/admin">
+            <button class="btn admin-btn">Admin Panel</button>
+        </a>
+
     </div>
 </div>
+
+</body>
+</html>

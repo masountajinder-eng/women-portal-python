@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_file, redirect
 import os
 from dotenv import load_dotenv
 import random
@@ -7,11 +7,8 @@ from openpyxl import Workbook, load_workbook
 from threading import Lock
 from datetime import datetime
 import smtplib
-import socket
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from email.mime.base import MIMEBase
-from email import encoders
 
 # ================= INIT =================
 load_dotenv()
@@ -19,15 +16,7 @@ load_dotenv()
 app = Flask(__name__, static_folder='static', template_folder='templates')
 app.secret_key = os.getenv("SECRET_KEY", "secret123")
 
-print("🔥 FINAL WORKING VERSION RUNNING")
-
-# ================= EMAIL =================
-ADMIN_EMAIL = os.getenv("SMTP_USER")
-
-SMTP_SERVER = os.getenv("SMTP_SERVER")
-SMTP_PORT = int(os.getenv("SMTP_PORT", 587))
-SMTP_USER = os.getenv("SMTP_USER")
-SMTP_PASS = os.getenv("SMTP_PASS")
+print("🔥 FINAL WORKING VERSION")
 
 # ================= PATH =================
 UPLOAD_FOLDER = "/tmp/audio_files"
@@ -43,12 +32,11 @@ def create_excel():
         wb = Workbook()
         ws = wb.active
         ws.append([
-            "ID", "Complaint ID", "Name", "Address", "Contact", "Email",
-            "Unit", "WO", "Quarter", "Complaint", "Category",
-            "Subcategory", "Reply", "Audio", "Date"
+            "ID", "Complaint ID", "Name", "Address", "Contact",
+            "Email", "Unit", "WO", "Quarter", "Complaint",
+            "Category", "Subcategory", "Reply", "Audio", "Date"
         ])
         wb.save(EXCEL_FILE)
-        print("✅ Excel created")
 
 create_excel()
 
@@ -76,58 +64,17 @@ def save_to_excel(data):
             now
         ])
         wb.save(EXCEL_FILE)
-        print("✅ Saved to Excel")
-
-# ================= EMAIL =================
-def send_email(subject, body, attachment_path=None):
-    try:
-        if not SMTP_SERVER or not SMTP_USER or not SMTP_PASS:
-            print("⚠️ Email config missing")
-            return
-
-        socket.gethostbyname(SMTP_SERVER)
-
-        msg = MIMEMultipart()
-        msg['From'] = SMTP_USER
-        msg['To'] = ADMIN_EMAIL
-        msg['Subject'] = subject
-        msg.attach(MIMEText(body, 'plain'))
-
-        if attachment_path and os.path.exists(attachment_path):
-            with open(attachment_path, "rb") as f:
-                part = MIMEBase('application', 'octet-stream')
-                part.set_payload(f.read())
-                encoders.encode_base64(part)
-                part.add_header(
-                    'Content-Disposition',
-                    f'attachment; filename={os.path.basename(attachment_path)}'
-                )
-                msg.attach(part)
-
-        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=10)
-        server.starttls()
-        server.login(SMTP_USER, SMTP_PASS)
-        server.send_message(msg)
-        server.quit()
-
-        print("✅ Email sent")
-
-    except Exception as e:
-        print("❌ Email error:", e)
 
 # ================= ROUTES =================
 
-# HOME PAGE
 @app.route('/')
 def home():
     return render_template("landing.html")
 
-
-# 🔥 MAIN COMPLAINT PAGE (THIS FIXES YOUR ISSUE)
+# ✅ COMPLAINT FORM
 @app.route('/complaint', methods=['GET', 'POST'])
 def complaint():
 
-    # 👉 FORM SUBMIT
     if request.method == 'POST':
         try:
             complaint_id = "CMP" + str(random.randint(10000, 99999))
@@ -150,8 +97,6 @@ def complaint():
 
             # AUDIO SAVE
             audio_data = request.form.get("audio_data")
-            audio_path = None
-
             if audio_data:
                 header, encoded = audio_data.split(",", 1)
                 file_data = base64.b64decode(encoded)
@@ -161,23 +106,8 @@ def complaint():
                     f.write(file_data)
 
                 data["audio"] = filepath
-                audio_path = filepath
 
-            # SAVE TO EXCEL
             save_to_excel(data)
-
-            # SEND EMAIL
-            send_email(
-                "New Complaint Submitted",
-                f"""
-Complaint ID: {complaint_id}
-Name: {data['name']}
-Contact: {data['contact']}
-Complaint: {data['complaint']}
-Category: {data['category']}
-""",
-                audio_path
-            )
 
             return jsonify({"status": "success", "id": complaint_id})
 
@@ -185,8 +115,54 @@ Category: {data['category']}
             print("❌ ERROR:", e)
             return jsonify({"status": "error", "message": str(e)})
 
-    # 👉 🔥 IMPORTANT: ALWAYS LOAD DASHBOARD UI
-    return render_template("dashboard.html")
+    return render_template("complaint.html")
+
+
+# ✅ DASHBOARD (NEW)
+@app.route('/dashboard')
+def dashboard():
+    try:
+        wb = load_workbook(EXCEL_FILE)
+        ws = wb.active
+        data = list(ws.values)
+
+        return render_template("dashboard.html", data=data)
+
+    except Exception as e:
+        print("❌ Dashboard Error:", e)
+        return "Error loading dashboard"
+
+
+# ✅ DOWNLOAD EXCEL (FIXED)
+@app.route("/download_excel")
+def download_excel():
+    try:
+        return send_file(EXCEL_FILE, as_attachment=True)
+    except:
+        return "File not found"
+
+
+# ✅ REPLY SYSTEM (BASIC)
+@app.route('/reply/<cid>', methods=['POST'])
+def reply(cid):
+    try:
+        reply_text = request.form.get("reply")
+
+        wb = load_workbook(EXCEL_FILE)
+        ws = wb.active
+
+        for row in ws.iter_rows(min_row=2):
+            if str(row[1].value) == cid:
+                row[12].value = reply_text   # Reply column
+                break
+
+        wb.save(EXCEL_FILE)
+
+        return redirect("/dashboard")
+
+    except Exception as e:
+        print("❌ Reply Error:", e)
+        return "Error"
 
 
 # ================= RUN =================

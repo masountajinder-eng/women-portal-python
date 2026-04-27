@@ -1,26 +1,96 @@
-<!-- ✅ DOWNLOAD BUTTON (TOP PAR ADD KIYA) -->
-<a href="{{ url_for('download_excel') }}">
-    <button style="background: green; color: white; padding: 10px; border: none;">
-        Download Excel
-    </button>
-</a>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #f5f5f5;
+            padding: 20px;
+        }
 
-<br><br>
+        h2 {
+            text-align: center;
+        }
+
+        .top-bar {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            background: green;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th, td {
+            padding: 10px;
+            border: 1px solid #ccc;
+            text-align: center;
+        }
+
+        th {
+            background: #333;
+            color: white;
+        }
+
+        input {
+            padding: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<h2>📊 Complaint Dashboard</h2>
+
+<div class="top-bar">
+    <!-- ✅ SAFE DOWNLOAD BUTTON -->
+    <a href="/download_excel">
+        <button class="btn">⬇ Download Excel</button>
+    </a>
+</div>
 
 <!-- ✅ TABLE -->
-<table border="1">
-{% for row in data %}
+<table>
 <tr>
-    <td>{{ row[1] }}</td>
-    <td>{{ row[2] }}</td>
-    <td>{{ row[9] }}</td>
-
-    <td>
-        <form action="/reply/{{ row[1] }}" method="POST">
-            <input name="reply">
-            <button>Reply</button>
-        </form>
-    </td>
+    <th>ID</th>
+    <th>Name</th>
+    <th>Complaint</th>
+    <th>Reply</th>
 </tr>
-{% endfor %}
+
+{% if data %}
+    {% for row in data %}
+    <tr>
+        <td>{{ row[1] }}</td>
+        <td>{{ row[2] }}</td>
+        <td>{{ row[9] }}</td>
+
+        <td>
+            <form action="/reply/{{ row[1] }}" method="POST">
+                <input name="reply" placeholder="Type reply">
+                <button class="btn">Send</button>
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+{% else %}
+    <tr>
+        <td colspan="4">No complaints found</td>
+    </tr>
+{% endif %}
+
 </table>
+
+</body>
+</html>
