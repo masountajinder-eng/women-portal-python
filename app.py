@@ -13,99 +13,73 @@ from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
 
-# ================== INIT ==================
 load_dotenv()
 
 app = Flask(__name__, static_folder='static', static_url_path='/static')
 app.secret_key = os.getenv("SECRET_KEY", "secret123")
 
-print("🔥 FINAL CLEAN VERSION RUNNING (Excel + Email only)")
-
-# ================== EMAIL CONFIG ==================
-ADMIN_EMAIL = os.getenv("SMTP_USER")
-
-SMTP_SERVER = os.getenv("SMTP_SERVER")
-SMTP_PORT = int(os.getenv("SMTP_PORT", 587))
-SMTP_USER = os.getenv("SMTP_USER")
-SMTP_PASS = os.getenv("SMTP_PASS")
-
-print("📧 SMTP CONFIG:")
-print("SERVER:", SMTP_SERVER)
-print("PORT:", SMTP_PORT)
-print("USER:", SMTP_USER)
-
-# ================== PATH ==================
 UPLOAD_FOLDER = "/tmp/audio_files"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# 🔥 IMPORTANT FIX (Render compatible)
 EXCEL_FILE = "/tmp/complaints.xlsx"
-
-# ================== EXCEL ==================
 excel_lock = Lock()
 
+# ================== EXCEL ==================
 def create_excel():
     if not os.path.exists(EXCEL_FILE):
         wb = Workbook()
         ws = wb.active
         ws.append([
-            "ID", "Complaint ID", "Name", "Address", "Contact", "Email",
-            "Unit", "WO", "Quarter", "Complaint", "Category",
-            "Subcategory", "Reply", "Audio", "Date"
+            "ID","Complaint ID","Name","Address","Contact","Email",
+            "Unit","WO","Quarter","Complaint","Category",
+            "Subcategory","Reply","Audio","Date"
         ])
         wb.save(EXCEL_FILE)
-        print("✅ Excel file created")
 
 create_excel()
 
 def save_to_excel(data):
-    try:
-        with excel_lock:
-            wb = load_workbook(EXCEL_FILE)
-            ws = wb.active
-            next_id = ws.max_row
-            now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with excel_lock:
+        wb = load_workbook(EXCEL_FILE)
+        ws = wb.active
+        next_id = ws.max_row
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-            ws.append([
-                next_id,
-                data["complaint_id"],
-                data["name"],
-                data["address"],
-                data["contact"],
-                data["email"],
-                data["unit"],
-                data["wo"],
-                data["quarter"],
-                data["complaint"],
-                data["category"],
-                data["subcategory"],
-                data["reply"],
-                data["audio"],
-                now
-            ])
-            wb.save(EXCEL_FILE)
-            print("✅ Saved to Excel")
-
-    except Exception as e:
-        print("❌ EXCEL ERROR:", e)
+        ws.append([
+            next_id,
+            data["complaint_id"],
+            data["name"],
+            data["address"],
+            data["contact"],
+            data["email"],
+            data["unit"],
+            data["wo"],
+            data["quarter"],
+            data["complaint"],
+            data["category"],
+            data["subcategory"],
+            data["reply"],
+            data["audio"],
+            now
+        ])
+        wb.save(EXCEL_FILE)
 
 # ================== EMAIL ==================
 def send_email(subject, body, attachment_path=None):
-    try:
-        if not SMTP_SERVER or not SMTP_USER or not SMTP_PASS:
-            print("⚠️ Email config missing")
-            return
+    SMTP_SERVER = os.getenv("SMTP_SERVER")
+    SMTP_PORT = int(os.getenv("SMTP_PORT", 587))
+    SMTP_USER = os.getenv("SMTP_USER")
+    SMTP_PASS = os.getenv("SMTP_PASS")
 
-        # DNS check
-        try:
-            socket.gethostbyname(SMTP_SERVER)
-        except:
-            print("❌ SMTP SERVER NOT RESOLVED")
-            return
+    if not SMTP_SERVER or not SMTP_USER or not SMTP_PASS:
+        return
+
+    try:
+        socket.gethostbyname(SMTP_SERVER)
 
         msg = MIMEMultipart()
         msg['From'] = SMTP_USER
-        msg['To'] = ADMIN_EMAIL
+        msg['To'] = SMTP_USER
         msg['Subject'] = subject
         msg.attach(MIMEText(body, 'plain'))
 
@@ -114,13 +88,9 @@ def send_email(subject, body, attachment_path=None):
                 part = MIMEBase('application', 'octet-stream')
                 part.set_payload(f.read())
                 encoders.encode_base64(part)
-                part.add_header(
-                    'Content-Disposition',
-                    f'attachment; filename={os.path.basename(attachment_path)}'
-                )
+                part.add_header('Content-Disposition',
+                                f'attachment; filename={os.path.basename(attachment_path)}')
                 msg.attach(part)
-
-        print("📡 Connecting to SMTP...")
 
         server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=10)
         server.starttls()
@@ -128,10 +98,8 @@ def send_email(subject, body, attachment_path=None):
         server.send_message(msg)
         server.quit()
 
-        print("✅ Email sent")
-
     except Exception as e:
-        print("❌ EMAIL ERROR:", e)
+        print("Email Error:", e)
 
 # ================== ROUTES ==================
 @app.route('/')
@@ -142,8 +110,6 @@ def landing():
 def complaint():
     if request.method == 'POST':
         try:
-            print("📩 New complaint received")
-
             complaint_id = "CMP" + str(random.randint(10000, 99999))
 
             data = {
@@ -162,50 +128,37 @@ def complaint():
                 "audio": ""
             }
 
-            # AUDIO SAVE
             audio_data = request.form.get("audio_data")
             audio_path = None
 
             if audio_data:
-                try:
-                    header, encoded = audio_data.split(",", 1)
-                    file_data = base64.b64decode(encoded)
-                    filename = f"{complaint_id}.webm"
-                    filepath = os.path.join(UPLOAD_FOLDER, filename)
+                header, encoded = audio_data.split(",", 1)
+                file_data = base64.b64decode(encoded)
+                filepath = os.path.join(UPLOAD_FOLDER, f"{complaint_id}.webm")
 
-                    with open(filepath, "wb") as f:
-                        f.write(file_data)
+                with open(filepath, "wb") as f:
+                    f.write(file_data)
 
-                    data["audio"] = filepath
-                    audio_path = filepath
-                    print("✅ Audio saved")
+                data["audio"] = filepath
+                audio_path = filepath
 
-                except Exception as e:
-                    print("❌ AUDIO ERROR:", e)
-
-            # SAVE TO EXCEL
             save_to_excel(data)
 
-            # SEND EMAIL (safe)
             email_body = f"""
 Complaint ID: {data['complaint_id']}
 Name: {data['name']}
 Contact: {data['contact']}
 Complaint: {data['complaint']}
-Category: {data['category']}
 """
 
-            try:
-                send_email("New Complaint Submitted", email_body, audio_path)
-            except:
-                print("⚠️ Email failed but complaint saved")
+            send_email("New Complaint Submitted", email_body, audio_path)
 
             return jsonify({"status": "success", "id": complaint_id})
 
         except Exception as e:
-            print("❌ MAIN ERROR:", e)
             return jsonify({"status": "error", "message": str(e)})
 
+    # ✅ ONLY THIS LINE (IMPORTANT)
     return render_template("complaint.html")
 
 # ================== RUN ==================
