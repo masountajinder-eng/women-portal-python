@@ -6,6 +6,8 @@ import base64
 from openpyxl import Workbook, load_workbook
 from threading import Lock
 from datetime import datetime
+import smtplib
+from email.mime.text import MIMEText
 
 # ================= INIT =================
 load_dotenv()
@@ -13,13 +15,46 @@ load_dotenv()
 app = Flask(__name__, static_folder='static', template_folder='templates')
 app.secret_key = os.getenv("SECRET_KEY", "secret123")
 
-print("🔥 FINAL COMPLETE SYSTEM RUNNING")
+print("🔥 FINAL SYSTEM WITH EMAIL ALERT RUNNING")
+
+# ================= EMAIL CONFIG =================
+SMTP_USER = os.getenv("SMTP_USER")
+SMTP_PASS = os.getenv("SMTP_PASS")
+
+def send_alert_email(data):
+    try:
+        msg = MIMEText(f"""
+🚨 NEW COMPLAINT RECEIVED 🚨
+
+Complaint ID: {data['complaint_id']}
+Name: {data['name']}
+Contact: {data['contact']}
+Category: {data['category']}
+Subcategory: {data['subcategory']}
+
+Complaint:
+{data['complaint']}
+        """)
+
+        msg['Subject'] = "🚨 URGENT: New Complaint Submitted"
+        msg['From'] = SMTP_USER
+        msg['To'] = SMTP_USER
+
+        server = smtplib.SMTP("smtp.gmail.com", 587)
+        server.starttls()
+        server.login(SMTP_USER, SMTP_PASS)
+        server.send_message(msg)
+        server.quit()
+
+        print("✅ Email Alert Sent")
+
+    except Exception as e:
+        print("❌ Email Error:", e)
 
 # ================= PATH =================
 UPLOAD_FOLDER = "audio_files"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# ❗ IMPORTANT: /tmp hata diya (permanent save)
 EXCEL_FILE = "complaints.xlsx"
 
 # ================= EXCEL =================
@@ -108,7 +143,11 @@ def complaint():
                 except Exception as e:
                     print("⚠️ Audio error:", e)
 
+            # ✅ SAVE
             save_to_excel(data)
+
+            # 🔥 EMAIL ALERT
+            send_alert_email(data)
 
             return jsonify({"status": "success", "id": complaint_id})
 
@@ -119,7 +158,7 @@ def complaint():
     return render_template("complaint.html")
 
 
-# ✅ TRACK COMPLAINT (NEW 🔥)
+# ✅ TRACK
 @app.route('/track', methods=['GET', 'POST'])
 def track():
     data = None
@@ -138,52 +177,37 @@ def track():
     return render_template("track.html", data=data)
 
 
-# ✅ ADMIN PANEL (NEW 🔥)
+# ✅ ADMIN
 @app.route('/admin')
 def admin():
-    try:
-        wb = load_workbook(EXCEL_FILE)
-        ws = wb.active
-        data = list(ws.values)
-
-        return render_template("admin.html", data=data)
-
-    except Exception as e:
-        print("❌ Admin Error:", e)
-        return "Admin Error"
+    wb = load_workbook(EXCEL_FILE)
+    ws = wb.active
+    data = list(ws.values)
+    return render_template("admin.html", data=data)
 
 
-# ✅ DOWNLOAD EXCEL
+# ✅ DOWNLOAD
 @app.route("/download_excel")
 def download_excel():
-    try:
-        return send_file(EXCEL_FILE, as_attachment=True)
-    except Exception as e:
-        print("❌ Download Error:", e)
-        return "File not found"
+    return send_file(EXCEL_FILE, as_attachment=True)
 
 
-# ✅ REPLY SYSTEM
+# ✅ REPLY
 @app.route('/reply/<cid>', methods=['POST'])
 def reply(cid):
-    try:
-        reply_text = request.form.get("reply", "")
+    reply_text = request.form.get("reply", "")
 
-        wb = load_workbook(EXCEL_FILE)
-        ws = wb.active
+    wb = load_workbook(EXCEL_FILE)
+    ws = wb.active
 
-        for row in ws.iter_rows(min_row=2):
-            if str(row[1].value) == cid:
-                row[12].value = reply_text
-                break
+    for row in ws.iter_rows(min_row=2):
+        if str(row[1].value) == cid:
+            row[12].value = reply_text
+            break
 
-        wb.save(EXCEL_FILE)
+    wb.save(EXCEL_FILE)
 
-        return redirect("/admin")
-
-    except Exception as e:
-        print("❌ Reply Error:", e)
-        return "Reply Error"
+    return redirect("/admin")
 
 
 # ================= RUN =================
