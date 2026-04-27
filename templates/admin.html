@@ -17,15 +17,15 @@
     <h3>All Complaints</h3>
 
     <div>
-        <a href="/download">
+        <a href="/download_excel">
             <button style="padding:10px 15px; background:green; color:white; border:none;">
                 📥 Download Excel
             </button>
         </a>
 
-        <a href="/logout">
+        <a href="/">
             <button style="padding:10px 15px; background:black; color:white; border:none;">
-                🚪 Logout
+                🚪 Home
             </button>
         </a>
     </div>
@@ -34,6 +34,7 @@
 <table border="1" width="100%" cellpadding="10">
 <tr>
     <th>ID</th>
+    <th>Complaint ID</th>
     <th>Name</th>
     <th>Complaint</th>
     <th>Category</th>
@@ -43,20 +44,22 @@
     <th>Action</th>
 </tr>
 
-{% for row in data %}
-<tr id="row_{{row.complaint_id}}">
+<!-- ⚠️ IMPORTANT: data[1:] -->
+{% for row in data[1:] %}
+<tr id="row_{{row[1]}}">
 
-    <td>{{row.complaint_id}}</td>
-    <td>{{row.name}}</td>
-    <td>{{row.complaint}}</td>
-    <td>{{row.category}}</td>
-    <td>{{row.subcategory}}</td>
+    <td>{{row[0]}}</td>
+    <td>{{row[1]}}</td>
+    <td>{{row[2]}}</td>
+    <td>{{row[9]}}</td>
+    <td>{{row[10]}}</td>
+    <td>{{row[11]}}</td>
 
     <!-- 🎧 AUDIO -->
     <td>
-        {% if row.audio %}
+        {% if row[13] %}
             <audio controls style="width:150px;">
-                <source src="{{row.audio}}" type="audio/webm">
+                <source src="{{row[13]}}" type="audio/webm">
             </audio>
         {% else %}
             <span style="color:gray;">No Audio</span>
@@ -65,21 +68,21 @@
 
     <!-- 💬 REPLY -->
     <td>
-        <input id="reply_{{row.complaint_id}}" placeholder="Type reply" style="width:120px;">
+        <input id="reply_{{row[1]}}" placeholder="Type reply" style="width:120px;">
 
-        <button onclick="sendReply('{{row.complaint_id}}')" 
+        <button onclick="sendReply('{{row[1]}}')" 
         style="background:blue;color:white;">
             Send
         </button>
 
         <p style="color:green; margin-top:5px;">
-            {{row.reply}}
+            {{row[12]}}
         </p>
     </td>
 
     <!-- 🗑️ DELETE -->
     <td>
-        <button onclick="deleteComplaint('{{row.complaint_id}}')" 
+        <button onclick="deleteComplaint('{{row[1]}}')" 
         style="background:red;color:white;">
             Delete
         </button>
@@ -114,14 +117,10 @@ function sendReply(id){
         },
         body: "reply=" + encodeURIComponent(reply)
     })
-    .then(res => res.json())
-    .then(data => {
-        if(data.status === "success"){
-            alert("✅ Reply Sent");
-            location.reload();
-        } else {
-            alert("❌ Error sending reply");
-        }
+    .then(res => res.text())
+    .then(() => {
+        alert("✅ Reply Sent");
+        location.reload();
     });
 }
 
@@ -133,13 +132,9 @@ function deleteComplaint(id){
     fetch("/delete/" + id, {
         method: "POST"
     })
-    .then(res => res.json())
-    .then(data => {
-        if(data.status === "success"){
-            document.getElementById("row_" + id).remove();
-        } else {
-            alert("❌ Delete failed");
-        }
+    .then(res => res.text())
+    .then(() => {
+        document.getElementById("row_" + id).remove();
     });
 }
 
