@@ -1,17 +1,26 @@
+<!-- ✅ DOWNLOAD BUTTON (TOP PAR ADD KIYA) -->
+<a href="{{ url_for('download_excel') }}">
+    <button style="background: green; color: white; padding: 10px; border: none;">
+        Download Excel
+    </button>
+</a>
+
+<br><br>
+
+<!-- ✅ TABLE -->
 <table border="1">
 {% for row in data %}
 <tr>
-<td>{{ row[1] }}</td>
-<td>{{ row[2] }}</td>
-<td>{{ row[9] }}</td>
+    <td>{{ row[1] }}</td>
+    <td>{{ row[2] }}</td>
+    <td>{{ row[9] }}</td>
 
-<td>
-<form action="/reply/{{ row[1] }}" method="POST">
-<input name="reply">
-<button>Reply</button>
-</form>
-</td>
-
+    <td>
+        <form action="/reply/{{ row[1] }}" method="POST">
+            <input name="reply">
+            <button>Reply</button>
+        </form>
+    </td>
 </tr>
 {% endfor %}
 </table>

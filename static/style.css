@@ -6,7 +6,7 @@ body {
     z-index: 1;
 }
 
-/* 🔥 WATERMARK LOGO (237) */
+/* 🔥 WATERMARK LOGO */
 body::before {
     content: "";
     position: fixed;
@@ -14,17 +14,13 @@ body::before {
     left: 50%;
     width: 500px;
     height: 500px;
-
-    background-image: url("/static/237.png"); /* ✅ SAFE PATH */
+    background-image: url("/static/237.png");
     background-repeat: no-repeat;
     background-size: contain;
     background-position: center;
-
     opacity: 0.06;
-
     transform: translate(-50%, -50%) rotate(-15deg);
-
-    z-index: 0;  /* 🔥 FIXED */
+    z-index: 0;
     pointer-events: none;
 }
 
@@ -33,29 +29,52 @@ body::before {
     background: #2f4f3f;
     color: white;
     padding: 18px;
-    font-size: 24px;
+    font-size: 26px;
     font-weight: bold;
     text-align: center;
 }
 
-/* MAIN CONTAINER */
+/* CONTAINER */
 .container {
-    width: 65%;
+    width: 60%;
     margin: auto;
     margin-top: 30px;
     position: relative;
-    z-index: 2; /* 🔥 content always above watermark */
+    z-index: 2;
+}
+
+/* SUBTITLE */
+.subtitle {
+    text-align: center;
+    color: #5a6d5f;
+    margin-bottom: 10px;
+    font-size: 15px;
+}
+
+/* NOTICE */
+.notice {
+    background: #e6efe6;
+    padding: 12px;
+    border-radius: 12px;
+    text-align: center;
+    margin-bottom: 25px;
+    border: 1px solid #cddccc;
+    font-size: 14px;
 }
 
 /* CARD */
 .card {
     background: #ffffff;
     padding: 25px;
-    border-radius: 15px;
-    box-shadow: 0px 6px 18px rgba(0,0,0,0.08);
-    margin-bottom: 20px;
-    position: relative;
-    z-index: 2;
+    border-radius: 16px;
+    box-shadow: 0px 8px 20px rgba(0,0,0,0.08);
+    margin-bottom: 25px;
+}
+
+/* HEADINGS */
+h3 {
+    margin-bottom: 10px;
+    color: #2f4f3f;
 }
 
 /* INPUTS */
@@ -73,33 +92,6 @@ textarea {
     height: 110px;
 }
 
-/* HEADINGS */
-h1 {
-    text-align: center;
-    color: #2f4f3f;
-}
-
-.subtitle {
-    text-align: center;
-    color: #5a6d5f;
-    margin-bottom: 10px;
-}
-
-h2, h3 {
-    margin-bottom: 10px;
-    color: #2f4f3f;
-}
-
-/* NOTICE BOX */
-.notice {
-    background: #dce8dc;
-    padding: 12px;
-    border-radius: 12px;
-    text-align: center;
-    margin-bottom: 20px;
-    border: 1px solid #cddccc;
-}
-
 /* CATEGORY GRID */
 .grid {
     display: grid;
@@ -111,8 +103,8 @@ h2, h3 {
 /* CATEGORY BOX */
 .box {
     background: #f5f5f5;
-    padding: 25px;
-    border-radius: 12px;
+    padding: 30px;
+    border-radius: 14px;
     text-align: center;
     cursor: pointer;
     transition: 0.3s;
@@ -132,33 +124,7 @@ h2, h3 {
     transform: scale(1.05);
 }
 
-/* SUBCATEGORY BOX */
-.subcategory-box {
-    margin-top: 15px;
-}
-
-/* SUB OPTIONS */
-.sub-option {
-    padding: 12px;
-    margin: 8px 0;
-    border: 1px solid #ccc;
-    border-radius: 10px;
-    cursor: pointer;
-    background: #f9f9f9;
-    transition: 0.2s;
-}
-
-.sub-option:hover {
-    background: #eaeaea;
-}
-
-.sub-option.active {
-    background: #cce5ff;
-    border: 1px solid #007bff;
-    font-weight: 500;
-}
-
-/* AUDIO BUTTONS */
+/* AUDIO */
 .audio-controls {
     margin-top: 10px;
 }
@@ -168,9 +134,7 @@ h2, h3 {
     color: white;
     padding: 10px 15px;
     border-radius: 8px;
-    border: none;
     margin-right: 10px;
-    cursor: pointer;
 }
 
 .stop {
@@ -178,51 +142,57 @@ h2, h3 {
     color: white;
     padding: 10px 15px;
     border-radius: 8px;
-    border: none;
-    cursor: pointer;
 }
 
-/* EMERGENCY BUTTON */
+/* 🎤 AUDIO PLAYER LOOK */
+audio {
+    width: 100%;
+    margin-top: 10px;
+}
+
+/* 🚨 EMERGENCY BUTTON */
 .emergency {
     width: 100%;
     background: #c94c4c;
     color: white;
-    padding: 16px;
-    border-radius: 12px;
-    border: none;
-    margin-top: 15px;
-    font-size: 16px;
+    padding: 18px;
+    border-radius: 14px;
+    margin-top: 20px;
+    font-size: 17px;
+    font-weight: bold;
     cursor: pointer;
+    transition: 0.3s;
 }
 
 .emergency:hover {
     background: #a83232;
 }
 
-/* SUBMIT BUTTON */
+/* ✅ SUBMIT BUTTON */
 .submit {
     width: 100%;
     background: #2f4f3f;
     color: white;
-    padding: 16px;
-    border-radius: 12px;
-    border: none;
-    margin-top: 10px;
-    font-size: 16px;
+    padding: 18px;
+    border-radius: 14px;
+    margin-top: 12px;
+    font-size: 17px;
+    font-weight: bold;
     cursor: pointer;
+    transition: 0.3s;
 }
 
 .submit:hover {
     background: #1f3529;
 }
 
-/* GENERAL BUTTON FIX */
+/* BUTTON FIX */
 button {
     border: none;
     cursor: pointer;
 }
 
-/* MOBILE RESPONSIVE */
+/* MOBILE */
 @media (max-width: 768px) {
     .container {
         width: 90%;
@@ -232,7 +202,6 @@ button {
         grid-template-columns: 1fr;
     }
 
-    /* smaller watermark on mobile */
     body::before {
         width: 250px;
         height: 250px;
