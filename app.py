@@ -5,7 +5,7 @@ import random
 import base64
 from openpyxl import Workbook, load_workbook
 from threading import Lock
-from datetime import datetime
+from datetime import datetime, timedelta
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -18,7 +18,7 @@ load_dotenv()
 app = Flask(__name__, static_folder='static', template_folder='templates')
 app.secret_key = os.getenv("SECRET_KEY", "secret123")
 
-print("🔥 FINAL SYSTEM WITH ADMIN LOGIN RUNNING")
+print("🔥 FINAL SYSTEM WITH 24H FILTER RUNNING")
 
 # ================= ADMIN LOGIN =================
 ADMIN_USER = "237engrregt"
@@ -49,13 +49,13 @@ Complaint:
 """
         msg.attach(MIMEText(body, 'plain'))
 
-        # AUDIO
+        # AUDIO ATTACH
         if data.get("audio") and os.path.exists(data["audio"]):
             with open(data["audio"], "rb") as f:
                 part = MIMEBase('application', 'octet-stream')
                 part.set_payload(f.read())
                 encoders.encode_base64(part)
-                part.add_header('Content-Disposition', f'attachment; filename=audio.webm')
+                part.add_header('Content-Disposition', 'attachment; filename=audio.webm')
                 msg.attach(part)
 
         server = smtplib.SMTP("smtp.gmail.com", 587)
@@ -122,19 +122,14 @@ def save_to_excel(data):
 def home():
     return render_template("landing.html")
 
-# 🔐 LOGIN PAGE
+# 🔐 LOGIN
 @app.route('/login', methods=['GET','POST'])
 def login():
     if request.method == 'POST':
-        user = request.form.get("username")
-        pwd = request.form.get("password")
-
-        if user == ADMIN_USER and pwd == ADMIN_PASS:
+        if request.form.get("username") == ADMIN_USER and request.form.get("password") == ADMIN_PASS:
             session['admin'] = True
             return redirect("/admin")
-        else:
-            return "❌ Wrong credentials"
-
+        return "❌ Wrong credentials"
     return render_template("login.html")
 
 # 🔓 LOGOUT
@@ -146,7 +141,6 @@ def logout():
 # 📝 COMPLAINT
 @app.route('/complaint', methods=['GET','POST'])
 def complaint():
-
     if request.method == 'POST':
         complaint_id = "CMP" + str(random.randint(10000,99999))
 
@@ -166,7 +160,7 @@ def complaint():
             "audio": ""
         }
 
-        # AUDIO
+        # AUDIO SAVE
         audio_data = request.form.get("audio_data")
         if audio_data and "," in audio_data:
             header, encoded = audio_data.split(",",1)
@@ -182,7 +176,7 @@ def complaint():
 
     return render_template("complaint.html")
 
-# 📊 ADMIN PANEL
+# 📊 ADMIN PANEL (🔥 24 HOURS FILTER)
 @app.route('/admin')
 def admin():
     if not session.get('admin'):
@@ -192,16 +186,25 @@ def admin():
     ws = wb.active
 
     data = []
+    now = datetime.now()
+    last_24 = now - timedelta(hours=24)
+
     for row in ws.iter_rows(min_row=2, values_only=True):
-        data.append({
-            "complaint_id": row[1],
-            "name": row[2],
-            "complaint": row[9],
-            "category": row[10],
-            "subcategory": row[11],
-            "reply": row[12],
-            "audio": row[13]
-        })
+        try:
+            row_time = datetime.strptime(row[14], "%Y-%m-%d %H:%M:%S")
+
+            if row_time >= last_24:
+                data.append({
+                    "complaint_id": row[1],
+                    "name": row[2],
+                    "complaint": row[9],
+                    "category": row[10],
+                    "subcategory": row[11],
+                    "reply": row[12],
+                    "audio": row[13]
+                })
+        except:
+            continue
 
     return render_template("admin.html", data=data)
 
@@ -222,6 +225,40 @@ def track():
                 break
 
     return render_template("track.html", data=data)
+
+# 📥 DOWNLOAD 24H DATA
+@app.route('/download_excel')
+def download_excel():
+    try:
+        wb = load_workbook(EXCEL_FILE)
+        ws = wb.active
+
+        new_wb = Workbook()
+        new_ws = new_wb.active
+
+        # header
+        new_ws.append([cell.value for cell in ws[1]])
+
+        now = datetime.now()
+        last_24 = now - timedelta(hours=24)
+
+        for row in ws.iter_rows(min_row=2, values_only=True):
+            try:
+                row_time = datetime.strptime(row[14], "%Y-%m-%d %H:%M:%S")
+
+                if row_time >= last_24:
+                    new_ws.append(row)
+            except:
+                continue
+
+        temp_file = "/tmp/last24h.xlsx"
+        new_wb.save(temp_file)
+
+        return send_file(temp_file, as_attachment=True)
+
+    except Exception as e:
+        print("❌ DOWNLOAD ERROR:", e)
+        return "Download error"
 
 # ================= RUN =================
 if __name__ == "__main__":
