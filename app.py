@@ -25,10 +25,10 @@ print("🔥 FINAL SYSTEM WITH GOOGLE SHEET + EMAIL RUNNING")
 ADMIN_USER = "237engrregt"
 ADMIN_PASS = "237237chakde"
 
-# ================= GOOGLE SHEET URL =================
+# ================= GOOGLE SHEET =================
 GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwULvlFiZY8fpezE-lVzA0MRMtLysDlzzQM_GJ2GjhE7Zb33EE7N2-MA_4gUSTBQvetDg/exec"
 
-# ================= SEND =================
+# ================= SEND TO SHEET =================
 def send_to_google_sheet(data):
     try:
         payload = {
@@ -44,7 +44,7 @@ def send_to_google_sheet(data):
     except Exception as e:
         print("❌ Google Sheet error:", e)
 
-# 🔥 NEW: READ FROM GOOGLE SHEET
+# ================= GET FROM SHEET =================
 def get_sheet_data():
     try:
         res = requests.get(GOOGLE_SCRIPT_URL)
@@ -60,13 +60,11 @@ SMTP_PASS = os.getenv("SMTP_PASS")
 def send_alert_email(data):
     try:
         msg = MIMEMultipart()
-        msg['Subject'] = "🚨 237 Engr Regt - New Complaint Alert"
+        msg['Subject'] = "🚨 New Complaint Alert"
         msg['From'] = SMTP_USER
         msg['To'] = SMTP_USER
 
         body = f"""
-🚨 237 Engr Regt 🚨
-
 Complaint ID: {data['complaint_id']}
 Name: {data['name']}
 Contact: {data['contact']}
@@ -77,14 +75,6 @@ Complaint:
 {data['complaint']}
 """
         msg.attach(MIMEText(body, 'plain'))
-
-        if data.get("audio") and os.path.exists(data["audio"]):
-            with open(data["audio"], "rb") as f:
-                part = MIMEBase('application', 'octet-stream')
-                part.set_payload(f.read())
-                encoders.encode_base64(part)
-                part.add_header('Content-Disposition', 'attachment; filename=audio.webm')
-                msg.attach(part)
 
         server = smtplib.SMTP("smtp.gmail.com", 587)
         server.starttls()
@@ -97,13 +87,11 @@ Complaint:
     except Exception as e:
         print("❌ EMAIL ERROR:", e)
 
-# ================= PATH =================
+# ================= FILE PATH =================
 UPLOAD_FOLDER = "/tmp/audio_files"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 EXCEL_FILE = "/tmp/complaints.xlsx"
-
-# ================= EXCEL =================
 excel_lock = Lock()
 
 def create_excel():
@@ -186,6 +174,7 @@ def complaint():
             "audio": ""
         }
 
+        # Audio
         audio_data = request.form.get("audio_data")
         if audio_data and "," in audio_data:
             header, encoded = audio_data.split(",",1)
@@ -195,7 +184,6 @@ def complaint():
             data["audio"] = filepath
 
         save_to_excel(data)
-
         send_alert_email(data)
         send_to_google_sheet(data)
 
@@ -209,28 +197,24 @@ def admin():
     if not session.get('admin'):
         return redirect("/login")
 
-    # 🔥 CHANGE: GOOGLE SHEET DATA
     data = get_sheet_data()
-
     return render_template("admin.html", data=data)
 
 # ================= TRACK =================
 @app.route('/track', methods=['GET','POST'])
 def track():
-    data = None
+    result = None
 
     if request.method == 'POST':
         cid = request.form.get("complaint_id")
-
-        # 🔥 CHANGE: SEARCH IN GOOGLE SHEET
         sheet_data = get_sheet_data()
 
-        for row in sheet_data:
-            if row.get("Complaint ID") == cid:
-                data = row
+        for row in sheet_data[1:]:
+            if row[0] == cid:
+                result = row
                 break
 
-    return render_template("track.html", data=data)
+    return render_template("track.html", result=result)
 
 # ================= DOWNLOAD =================
 @app.route('/download_excel')

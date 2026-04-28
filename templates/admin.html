@@ -18,8 +18,8 @@
 
     <div style="display:flex; gap:10px;">
 
-        <!-- 📊 GOOGLE SHEET BUTTON (NEW) -->
-        <a href="https://docs.google.com/spreadsheets/d/1BpKytukjZUP1PVdXx6tuSgV_e2xvrl3b95nDaspjf0Y/edit?gid=0#gid=0">
+        <!-- 📊 GOOGLE SHEET BUTTON -->
+        <a href="https://docs.google.com/spreadsheets/d/1BpKytukjZUP1PVdXx6tuSgV_e2xvrl3b95nDaspjf0Y/edit?gid=0#gid=0" target="_blank">
             <button style="padding:10px 15px; background:#2563eb; color:white; border:none;">
                 📊 Open Sheet
             </button>
@@ -44,60 +44,26 @@
 
 <table border="1" width="100%" cellpadding="10">
 <tr>
-    <th>ID</th>
     <th>Complaint ID</th>
     <th>Name</th>
+    <th>Contact</th>
     <th>Complaint</th>
     <th>Category</th>
     <th>Subcategory</th>
-    <th>Audio</th>
-    <th>Reply</th>
-    <th>Action</th>
+    <th>Date</th>
 </tr>
 
-<!-- ⚠️ IMPORTANT: data[1:] -->
+<!-- 🔥 GOOGLE SHEET DATA -->
 {% for row in data[1:] %}
-<tr id="row_{{row[1]}}">
+<tr>
 
-    <td>{{row[0]}}</td>
-    <td>{{row[1]}}</td>
-    <td>{{row[2]}}</td>
-    <td>{{row[9]}}</td>
-    <td>{{row[10]}}</td>
-    <td>{{row[11]}}</td>
-
-    <!-- 🎧 AUDIO -->
-    <td>
-        {% if row[13] %}
-            <audio controls style="width:150px;">
-                <source src="{{row[13]}}" type="audio/webm">
-            </audio>
-        {% else %}
-            <span style="color:gray;">No Audio</span>
-        {% endif %}
-    </td>
-
-    <!-- 💬 REPLY -->
-    <td>
-        <input id="reply_{{row[1]}}" placeholder="Type reply" style="width:120px;">
-
-        <button onclick="sendReply('{{row[1]}}')" 
-        style="background:blue;color:white;">
-            Send
-        </button>
-
-        <p style="color:green; margin-top:5px;">
-            {{row[12]}}
-        </p>
-    </td>
-
-    <!-- 🗑️ DELETE -->
-    <td>
-        <button onclick="deleteComplaint('{{row[1]}}')" 
-        style="background:red;color:white;">
-            Delete
-        </button>
-    </td>
+    <td>{{row[0]}}</td> <!-- Complaint ID -->
+    <td>{{row[1]}}</td> <!-- Name -->
+    <td>{{row[2]}}</td> <!-- Contact -->
+    <td>{{row[3]}}</td> <!-- Complaint -->
+    <td>{{row[4]}}</td> <!-- Category -->
+    <td>{{row[5]}}</td> <!-- Subcategory -->
+    <td>{{row[6]}}</td> <!-- Date -->
 
 </tr>
 {% endfor %}
@@ -112,42 +78,10 @@
 
 <script>
 
-// 💬 SEND REPLY
-function sendReply(id){
-    let reply = document.getElementById("reply_" + id).value;
-
-    if(!reply){
-        alert("Enter reply first");
-        return;
-    }
-
-    fetch("/reply/" + id, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/x-www-form-urlencoded"
-        },
-        body: "reply=" + encodeURIComponent(reply)
-    })
-    .then(res => res.text())
-    .then(() => {
-        alert("✅ Reply Sent");
-        location.reload();
-    });
-}
-
-// 🗑️ DELETE FUNCTION
-function deleteComplaint(id){
-
-    if(!confirm("Delete karna hai?")) return;
-
-    fetch("/delete/" + id, {
-        method: "POST"
-    })
-    .then(res => res.text())
-    .then(() => {
-        document.getElementById("row_" + id).remove();
-    });
-}
+// 🔥 AUTO REFRESH EVERY 5 SEC
+setInterval(() => {
+    location.reload();
+}, 5000);
 
 </script>
 
