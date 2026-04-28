@@ -3,6 +3,46 @@
 <head>
     <title>Admin Panel</title>
     <link rel="stylesheet" href="/static/style.css">
+
+    <style>
+        .top-bar {
+            display:flex;
+            justify-content:center;
+            gap:15px;
+            margin-bottom:20px;
+        }
+
+        .btn {
+            padding:10px 18px;
+            border:none;
+            border-radius:8px;
+            cursor:pointer;
+            font-size:14px;
+        }
+
+        .sheet { background:#2563eb; color:white; }
+        .home { background:black; color:white; }
+
+        .item {
+            border-bottom:1px solid #ddd;
+            padding:15px 0;
+        }
+
+        input {
+            padding:8px;
+            margin-top:8px;
+            width:200px;
+        }
+
+        button.send {
+            background:green;
+            color:white;
+            padding:8px 12px;
+            margin-left:10px;
+            border:none;
+            border-radius:5px;
+        }
+    </style>
 </head>
 
 <body>
@@ -12,73 +52,77 @@
 <div class="container">
 <div class="card">
 
-<!-- 🔥 TOP ACTION BAR -->
-<div style="margin-bottom:15px; display:flex; justify-content:space-between; align-items:center;">
-    <h3>All Complaints</h3>
+<!-- 🔝 TOP BUTTONS -->
+<div class="top-bar">
 
-    <div style="display:flex; gap:10px;">
+    <a href="https://docs.google.com/spreadsheets/d/1BpKytukjZUP1PVdXx6tuSgV_e2xvrl3b95nDaspjf0Y/edit?gid=0#gid=0" target="_blank">
+        <button class="btn sheet">📊 Open Sheet</button>
+    </a>
 
-        <!-- 📊 GOOGLE SHEET BUTTON -->
-        <a href="https://docs.google.com/spreadsheets/d/1BpKytukjZUP1PVdXx6tuSgV_e2xvrl3b95nDaspjf0Y/edit?gid=0#gid=0" target="_blank">
-            <button style="padding:10px 15px; background:#2563eb; color:white; border:none;">
-                📊 Open Sheet
-            </button>
-        </a>
+    <a href="/">
+        <button class="btn home">🏠 Home</button>
+    </a>
 
-        <!-- 📥 DOWNLOAD -->
-        <a href="/download_excel">
-            <button style="padding:10px 15px; background:green; color:white; border:none;">
-                📥 Download Excel
-            </button>
-        </a>
-
-        <!-- 🏠 HOME -->
-        <a href="/">
-            <button style="padding:10px 15px; background:black; color:white; border:none;">
-                🚪 Home
-            </button>
-        </a>
-
-    </div>
 </div>
 
-<table border="1" width="100%" cellpadding="10">
-<tr>
-    <th>Complaint ID</th>
-    <th>Name</th>
-    <th>Contact</th>
-    <th>Complaint</th>
-    <th>Category</th>
-    <th>Subcategory</th>
-    <th>Date</th>
-</tr>
+<h3 style="text-align:center;">All Complaints</h3>
 
-<!-- 🔥 GOOGLE SHEET DATA -->
+<!-- 🔥 DATA LOOP -->
 {% for row in data[1:] %}
-<tr>
+<div class="item">
 
-    <td>{{row[0]}}</td> <!-- Complaint ID -->
-    <td>{{row[1]}}</td> <!-- Name -->
-    <td>{{row[2]}}</td> <!-- Contact -->
-    <td>{{row[3]}}</td> <!-- Complaint -->
-    <td>{{row[4]}}</td> <!-- Category -->
-    <td>{{row[5]}}</td> <!-- Subcategory -->
-    <td>{{row[6]}}</td> <!-- Date -->
+    <p><b>Complaint ID:</b> {{row[0]}}</p>
+    <p><b>Name:</b> {{row[1]}}</p>
+    <p><b>Contact:</b> {{row[2]}}</p>
+    <p><b>Complaint:</b> {{row[3]}}</p>
+    <p><b>Category:</b> {{row[4]}}</p>
+    <p><b>Subcategory:</b> {{row[5]}}</p>
+    <p><b>Date:</b> {{row[6]}}</p>
 
-</tr>
+    <!-- 💬 REPLY -->
+    <input id="reply_{{row[0]}}" placeholder="Type reply">
+
+    <button class="send" onclick="sendReply('{{row[0]}}')">
+        Send
+    </button>
+
+    <!-- Existing reply -->
+    <p style="color:green;">
+        {{row[7] if row|length > 7 else ""}}
+    </p>
+
+</div>
 {% endfor %}
 
-</table>
-
 </div>
 </div>
-
-<!-- 🔊 SOUND -->
-<audio id="alertSound" src="/static/alert.mp3"></audio>
 
 <script>
 
-// 🔥 AUTO REFRESH EVERY 5 SEC
+// 💬 SEND REPLY
+function sendReply(id){
+    let reply = document.getElementById("reply_" + id).value;
+
+    if(!reply){
+        alert("Enter reply first");
+        return;
+    }
+
+    fetch("/reply/" + id, {
+        method:"POST",
+        headers:{
+            "Content-Type":"application/x-www-form-urlencoded"
+        },
+        body:"reply=" + encodeURIComponent(reply)
+    })
+    .then(res=>res.text())
+    .then(()=>{
+        alert("✅ Reply Sent");
+        location.reload();
+    });
+}
+
+// 🔄 AUTO REFRESH
 setInterval(() => {
     location.reload();
 }, 5000);
