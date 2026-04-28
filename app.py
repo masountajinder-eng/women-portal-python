@@ -26,7 +26,7 @@ ADMIN_USER = "237engrregt"
 ADMIN_PASS = "237237chakde"
 
 # ================= GOOGLE SHEET =================
-GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwULvlFiZY8fpezE-lVzA0MRMtLysDlzzQM_GJ2GjhE7Zb33EE7N2-MA_4gUSTBQvetDg/exec"
+GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx9YUvCpKgwBrFiMfi3aFYBCCsnFavoc88OWFlgsBKjPL5df29dn0WrARbstL4hTXwRzg/exec"
 
 # ================= SEND TO SHEET =================
 def send_to_google_sheet(data):
@@ -60,11 +60,13 @@ SMTP_PASS = os.getenv("SMTP_PASS")
 def send_alert_email(data):
     try:
         msg = MIMEMultipart()
-        msg['Subject'] = "🚨 New Complaint Alert"
+        msg['Subject'] = f"🚨 New Complaint: {data['complaint_id']}"
         msg['From'] = SMTP_USER
         msg['To'] = SMTP_USER
 
         body = f"""
+🚨 New Complaint Received
+
 Complaint ID: {data['complaint_id']}
 Name: {data['name']}
 Contact: {data['contact']}
@@ -76,13 +78,26 @@ Complaint:
 """
         msg.attach(MIMEText(body, 'plain'))
 
+        # 🔥 AUDIO ATTACH (NEW)
+        if data.get("audio") and os.path.exists(data["audio"]):
+            with open(data["audio"], "rb") as f:
+                part = MIMEBase('application', 'octet-stream')
+                part.set_payload(f.read())
+
+            encoders.encode_base64(part)
+            part.add_header(
+                'Content-Disposition',
+                f'attachment; filename={os.path.basename(data["audio"])}'
+            )
+            msg.attach(part)
+
         server = smtplib.SMTP("smtp.gmail.com", 587)
         server.starttls()
         server.login(SMTP_USER, SMTP_PASS)
         server.send_message(msg)
         server.quit()
 
-        print("✅ EMAIL SENT")
+        print("✅ EMAIL SENT WITH AUDIO")
 
     except Exception as e:
         print("❌ EMAIL ERROR:", e)
@@ -184,7 +199,7 @@ def complaint():
             data["audio"] = filepath
 
         save_to_excel(data)
-        send_alert_email(data)
+        send_alert_email(data)   # 🔥 email with audio
         send_to_google_sheet(data)
 
         return jsonify({"status":"success","id":complaint_id})
