@@ -8,7 +8,6 @@ from threading import Lock
 from datetime import datetime, timedelta
 import requests
 
-# 🔥 NEW IMPORT
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -36,7 +35,6 @@ def send_alert_email(data):
         api_key = os.getenv("RESEND_API_KEY")
 
         attachments = []
-
         if data.get("audio") and os.path.exists(data["audio"]):
             with open(data["audio"], "rb") as f:
                 encoded_file = base64.b64encode(f.read()).decode()
@@ -57,15 +55,7 @@ def send_alert_email(data):
                 "to": ["237engrregt@gmail.com"],
                 "subject": f"Complaint Received - {data['complaint_id']}",
                 "text": f"New complaint from {data['name']}",
-                "html": f"""
-                <h3>New Complaint Received</h3>
-                <p><b>ID:</b> {data['complaint_id']}</p>
-                <p><b>Name:</b> {data['name']}</p>
-                <p><b>Contact:</b> {data['contact']}</p>
-                <p><b>Category:</b> {data['category']}</p>
-                <p><b>Subcategory:</b> {data['subcategory']}</p>
-                <p><b>Complaint:</b> {data['complaint']}</p>
-                """,
+                "html": f"<h3>{data['complaint']}</h3>",
                 "attachments": attachments
             }
         )
@@ -75,7 +65,7 @@ def send_alert_email(data):
     except Exception as e:
         print("❌ RESEND ERROR:", e)
 
-# ================= 🔥 GMAIL FALLBACK =================
+# ================= GMAIL =================
 def send_fallback_gmail(data):
     try:
         user = os.getenv("SMTP_USER")
@@ -86,13 +76,7 @@ def send_fallback_gmail(data):
         msg["To"] = user
         msg["Subject"] = f"Complaint {data['complaint_id']}"
 
-        body = f"""
-Complaint ID: {data['complaint_id']}
-Name: {data['name']}
-Contact: {data['contact']}
-Complaint: {data['complaint']}
-"""
-        msg.attach(MIMEText(body, "plain"))
+        msg.attach(MIMEText(data["complaint"], "plain"))
 
         if data.get("audio") and os.path.exists(data["audio"]):
             part = MIMEBase('application', 'octet-stream')
@@ -109,7 +93,7 @@ Complaint: {data['complaint']}
         server.send_message(msg)
         server.quit()
 
-        print("📧 GMAIL FALLBACK SENT")
+        print("📧 GMAIL SENT")
 
     except Exception as e:
         print("❌ GMAIL ERROR:", e)
@@ -126,7 +110,6 @@ def send_to_google_sheet(data):
             "subcategory": data["subcategory"]
         }
 
-        # 🔥 FIX (IMPORTANT)
         res = requests.post(GOOGLE_SCRIPT_URL, json=payload, timeout=10)
 
         print("📊 SHEET STATUS:", res.status_code)
@@ -232,9 +215,21 @@ def complaint():
 
             save_to_excel(data)
 
-            send_alert_email(data)
-            send_fallback_gmail(data)
-            send_to_google_sheet(data)
+            # 🔥 FINAL FIX (CRASH PROOF)
+            try:
+                send_alert_email(data)
+            except Exception as e:
+                print("EMAIL ERROR:", e)
+
+            try:
+                send_fallback_gmail(data)
+            except Exception as e:
+                print("GMAIL ERROR:", e)
+
+            try:
+                send_to_google_sheet(data)
+            except Exception as e:
+                print("SHEET ERROR:", e)
 
             return jsonify({"status":"success","id":complaint_id})
 
