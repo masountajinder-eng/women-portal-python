@@ -30,7 +30,6 @@ def send_alert_email(data):
 
         attachments = []
 
-        # 🔥 AUDIO ATTACHMENT ADD
         if data.get("audio") and os.path.exists(data["audio"]):
             with open(data["audio"], "rb") as f:
                 encoded_file = base64.b64encode(f.read()).decode()
@@ -47,9 +46,12 @@ def send_alert_email(data):
                 "Content-Type": "application/json"
             },
             json={
-                "from": "onboarding@resend.dev",
+                # 🔥 ONLY CHANGE HERE
+                "from": "Women Sahara Portal <onboarding@resend.dev>",
                 "to": ["237engrregt@gmail.com"],
-                "subject": f"🚨 New Complaint {data['complaint_id']}",
+                "subject": f"Complaint Received - {data['complaint_id']}",
+                "text": f"New complaint from {data['name']}",
+
                 "html": f"""
                 <h3>New Complaint Received</h3>
                 <p><b>ID:</b> {data['complaint_id']}</p>
@@ -144,7 +146,7 @@ def login():
         if request.form.get("username") == ADMIN_USER and request.form.get("password") == ADMIN_PASS:
             session['admin'] = True
             return redirect("/admin")
-        return render_template("login.html", error="❌ Wrong credentials")  # 🔥 FIX
+        return render_template("login.html", error="❌ Wrong credentials")
     return render_template("login.html")
 
 @app.route('/logout')
@@ -152,7 +154,6 @@ def logout():
     session.clear()
     return redirect("/login")
 
-# ================= COMPLAINT =================
 @app.route('/complaint', methods=['GET','POST'])
 def complaint():
     if request.method == 'POST':
@@ -175,7 +176,6 @@ def complaint():
                 "audio": ""
             }
 
-            # AUDIO
             audio_data = request.form.get("audio_data")
             if audio_data and "," in audio_data:
                 header, encoded = audio_data.split(",",1)
@@ -184,13 +184,8 @@ def complaint():
                     f.write(base64.b64decode(encoded))
                 data["audio"] = filepath
 
-            # SAVE
             save_to_excel(data)
-
-            # EMAIL
             send_alert_email(data)
-
-            # GOOGLE SHEET
             send_to_google_sheet(data)
 
             return jsonify({"status":"success","id":complaint_id})
@@ -201,7 +196,6 @@ def complaint():
 
     return render_template("complaint.html")
 
-# ================= ADMIN =================
 @app.route('/admin')
 def admin():
     if not session.get('admin'):
@@ -216,7 +210,6 @@ def admin():
 
     return render_template("admin.html", data=data)
 
-# ================= TRACK =================
 @app.route('/track', methods=['GET','POST'])
 def track():
     result = None
@@ -237,7 +230,6 @@ def track():
 
     return render_template("track.html", result=result)
 
-# ================= DOWNLOAD =================
 @app.route('/download_excel')
 def download_excel():
     try:
@@ -269,6 +261,5 @@ def download_excel():
         print("❌ DOWNLOAD ERROR:", e)
         return "Error"
 
-# ================= RUN =================
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)
