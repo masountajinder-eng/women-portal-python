@@ -39,8 +39,10 @@ def send_to_google_sheet(data):
             "category": data["category"],
             "subcategory": data["subcategory"]
         }
-        requests.post(GOOGLE_SCRIPT_URL, json=payload)
-        print("✅ Sent to Google Sheet")
+
+        res = requests.post(GOOGLE_SCRIPT_URL, json=payload, timeout=10)
+        print("📡 Sheet Response:", res.text)
+
     except Exception as e:
         print("❌ Google Sheet error:", e)
 
@@ -78,7 +80,7 @@ Complaint:
 """
         msg.attach(MIMEText(body, 'plain'))
 
-        # 🔥 AUDIO ATTACH (NEW)
+        # AUDIO ATTACH
         if data.get("audio") and os.path.exists(data["audio"]):
             with open(data["audio"], "rb") as f:
                 part = MIMEBase('application', 'octet-stream')
@@ -97,7 +99,7 @@ Complaint:
         server.send_message(msg)
         server.quit()
 
-        print("✅ EMAIL SENT WITH AUDIO")
+        print("✅ EMAIL SENT")
 
     except Exception as e:
         print("❌ EMAIL ERROR:", e)
@@ -171,38 +173,54 @@ def logout():
 @app.route('/complaint', methods=['GET','POST'])
 def complaint():
     if request.method == 'POST':
-        complaint_id = "CMP" + str(random.randint(10000,99999))
+        try:
+            complaint_id = "CMP" + str(random.randint(10000,99999))
 
-        data = {
-            "complaint_id": complaint_id,
-            "name": request.form.get('name',''),
-            "address": request.form.get('address',''),
-            "contact": request.form.get('contact',''),
-            "email": request.form.get('email',''),
-            "unit": request.form.get('unit',''),
-            "wo": request.form.get('wo',''),
-            "quarter": request.form.get('quarter',''),
-            "complaint": request.form.get('complaint',''),
-            "category": request.form.get('category',''),
-            "subcategory": request.form.get('subcategory',''),
-            "reply": "Pending",
-            "audio": ""
-        }
+            data = {
+                "complaint_id": complaint_id,
+                "name": request.form.get('name',''),
+                "address": request.form.get('address',''),
+                "contact": request.form.get('contact',''),
+                "email": request.form.get('email',''),
+                "unit": request.form.get('unit',''),
+                "wo": request.form.get('wo',''),
+                "quarter": request.form.get('quarter',''),
+                "complaint": request.form.get('complaint',''),
+                "category": request.form.get('category',''),
+                "subcategory": request.form.get('subcategory',''),
+                "reply": "Pending",
+                "audio": ""
+            }
 
-        # Audio
-        audio_data = request.form.get("audio_data")
-        if audio_data and "," in audio_data:
-            header, encoded = audio_data.split(",",1)
-            filepath = os.path.join(UPLOAD_FOLDER, f"{complaint_id}.webm")
-            with open(filepath,"wb") as f:
-                f.write(base64.b64decode(encoded))
-            data["audio"] = filepath
+            # AUDIO
+            audio_data = request.form.get("audio_data")
+            if audio_data and "," in audio_data:
+                header, encoded = audio_data.split(",",1)
+                filepath = os.path.join(UPLOAD_FOLDER, f"{complaint_id}.webm")
+                with open(filepath,"wb") as f:
+                    f.write(base64.b64decode(encoded))
+                data["audio"] = filepath
 
-        save_to_excel(data)
-        send_alert_email(data)   # 🔥 email with audio
-        send_to_google_sheet(data)
+            # ALWAYS SAVE
+            save_to_excel(data)
 
-        return jsonify({"status":"success","id":complaint_id})
+            # SAFE EMAIL
+            try:
+                send_alert_email(data)
+            except Exception as e:
+                print("❌ Email failed:", e)
+
+            # SAFE SHEET
+            try:
+                send_to_google_sheet(data)
+            except Exception as e:
+                print("❌ Sheet failed:", e)
+
+            return jsonify({"status":"success","id":complaint_id})
+
+        except Exception as e:
+            print("❌ MAIN ERROR:", e)
+            return jsonify({"status":"success","id":"ERROR"})
 
     return render_template("complaint.html")
 
