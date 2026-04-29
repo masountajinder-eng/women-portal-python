@@ -40,7 +40,9 @@ def send_to_google_sheet(data):
             "subcategory": data["subcategory"]
         }
 
-        res = requests.post(GOOGLE_SCRIPT_URL, json=payload, timeout=10)
+        # 🔥 FIX HERE
+        res = requests.post(GOOGLE_SCRIPT_URL, data=payload, timeout=10)
+
         print("📡 Sheet Response:", res.text)
 
     except Exception as e:
@@ -201,26 +203,20 @@ def complaint():
                     f.write(base64.b64decode(encoded))
                 data["audio"] = filepath
 
-            # ALWAYS SAVE
+            # SAVE LOCAL
             save_to_excel(data)
 
-            # SAFE EMAIL
-            try:
-                send_alert_email(data)
-            except Exception as e:
-                print("❌ Email failed:", e)
+            # EMAIL
+            send_alert_email(data)
 
-            # SAFE SHEET
-            try:
-                send_to_google_sheet(data)
-            except Exception as e:
-                print("❌ Sheet failed:", e)
+            # GOOGLE SHEET
+            send_to_google_sheet(data)
 
             return jsonify({"status":"success","id":complaint_id})
 
         except Exception as e:
             print("❌ MAIN ERROR:", e)
-            return jsonify({"status":"success","id":"ERROR"})
+            return jsonify({"status":"error"})
 
     return render_template("complaint.html")
 
