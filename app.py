@@ -45,16 +45,54 @@ def send_alert_email(data):
                 "Content-Type": "application/json"
             },
             json={
-                "from": "Women Sahara Portal <onboarding@resend.dev>",
+                # 🔥 IMPORTANT FIX
+                "from": "onboarding@resend.dev",
                 "to": ["237engrregt@gmail.com"],
-                "subject": f"Complaint Received - {data['complaint_id']}",
-                "text": f"New complaint from {data['name']}",
-                "html": f"<h3>{data['complaint']}</h3>",
+
+                "subject": f"🚨 Complaint {data['complaint_id']}",
+
+                "html": f"""
+                <div style="font-family:Arial;background:#f4f4f4;padding:20px;">
+                    <div style="max-width:600px;margin:auto;background:white;
+                                padding:20px;border-radius:10px;
+                                box-shadow:0 0 10px rgba(0,0,0,0.1);">
+
+                        <h2 style="color:#d9534f;text-align:center;">
+                            🚨 New Complaint Received
+                        </h2>
+
+                        <hr>
+
+                        <p><b>ID:</b> {data['complaint_id']}</p>
+                        <p><b>Name:</b> {data['name']}</p>
+                        <p><b>Contact:</b> {data['contact']}</p>
+                        <p><b>Category:</b> {data['category']}</p>
+                        <p><b>Subcategory:</b> {data['subcategory']}</p>
+
+                        <div style="margin-top:15px;padding:15px;
+                                    background:#fff3cd;
+                                    border-left:5px solid #ffc107;
+                                    border-radius:5px;">
+                            <b>Complaint:</b><br>
+                            {data['complaint']}
+                        </div>
+
+                        <br>
+
+                        <p style="font-size:12px;color:gray;text-align:center;">
+                            Women Sahara Portal
+                        </p>
+
+                    </div>
+                </div>
+                """,
+
                 "attachments": attachments
             }
         )
 
         print("📧 RESEND STATUS:", response.status_code)
+        print("📧 RESEND RESPONSE:", response.text)
 
     except Exception as e:
         print("❌ RESEND ERROR:", e)
@@ -176,16 +214,8 @@ def complaint():
 
             save_to_excel(data)
 
-            # 🔥 ONLY WORKING CALLS
-            try:
-                send_alert_email(data)
-            except Exception as e:
-                print("EMAIL ERROR:", e)
-
-            try:
-                send_to_google_sheet(data)
-            except Exception as e:
-                print("SHEET ERROR:", e)
+            send_alert_email(data)
+            send_to_google_sheet(data)
 
             return jsonify({"status":"success","id":complaint_id})
 
