@@ -8,13 +8,20 @@ from threading import Lock
 from datetime import datetime, timedelta
 import requests
 
+# 🔥 NEW IMPORT
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.base import MIMEBase
+from email import encoders
+
 # ================= INIT =================
 load_dotenv()
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 app.secret_key = os.getenv("SECRET_KEY", "secret123")
 
-print("🔥 RESEND EMAIL SYSTEM RUNNING")
+print("🔥 EMAIL SYSTEM RUNNING")
 
 # ================= ADMIN =================
 ADMIN_USER = "237engrregt"
@@ -23,7 +30,7 @@ ADMIN_PASS = "237237chakde"
 # ================= GOOGLE SHEET =================
 GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxtSOOx9UhWgGqDg4YOpSsKZSsms-mQhOgeqqzamtobCwzRaexB_iHn0sGdUZnTH6BC9Q/exec"
 
-# ================= EMAIL (RESEND) =================
+# ================= RESEND EMAIL =================
 def send_alert_email(data):
     try:
         api_key = os.getenv("RESEND_API_KEY")
@@ -46,12 +53,10 @@ def send_alert_email(data):
                 "Content-Type": "application/json"
             },
             json={
-                # 🔥 ONLY CHANGE HERE
                 "from": "Women Sahara Portal <onboarding@resend.dev>",
                 "to": ["237engrregt@gmail.com"],
                 "subject": f"Complaint Received - {data['complaint_id']}",
                 "text": f"New complaint from {data['name']}",
-
                 "html": f"""
                 <h3>New Complaint Received</h3>
                 <p><b>ID:</b> {data['complaint_id']}</p>
@@ -66,10 +71,48 @@ def send_alert_email(data):
         )
 
         print("📧 RESEND STATUS:", response.status_code)
-        print("📧 RESEND RESPONSE:", response.text)
 
     except Exception as e:
         print("❌ RESEND ERROR:", e)
+
+# ================= 🔥 GMAIL FALLBACK =================
+def send_fallback_gmail(data):
+    try:
+        user = os.getenv("SMTP_USER")
+        password = os.getenv("SMTP_PASS")
+
+        msg = MIMEMultipart()
+        msg["From"] = user
+        msg["To"] = user
+        msg["Subject"] = f"Complaint {data['complaint_id']}"
+
+        body = f"""
+Complaint ID: {data['complaint_id']}
+Name: {data['name']}
+Contact: {data['contact']}
+Complaint: {data['complaint']}
+"""
+        msg.attach(MIMEText(body, "plain"))
+
+        if data.get("audio") and os.path.exists(data["audio"]):
+            part = MIMEBase('application', 'octet-stream')
+            with open(data["audio"], "rb") as f:
+                part.set_payload(f.read())
+            encoders.encode_base64(part)
+            part.add_header('Content-Disposition',
+                            f'attachment; filename="{os.path.basename(data["audio"])}"')
+            msg.attach(part)
+
+        server = smtplib.SMTP("smtp.gmail.com", 587)
+        server.starttls()
+        server.login(user, password)
+        server.send_message(msg)
+        server.quit()
+
+        print("📧 GMAIL FALLBACK SENT")
+
+    except Exception as e:
+        print("❌ GMAIL ERROR:", e)
 
 # ================= GOOGLE SHEET =================
 def send_to_google_sheet(data):
@@ -185,7 +228,11 @@ def complaint():
                 data["audio"] = filepath
 
             save_to_excel(data)
+
+            # 🔥 IMPORTANT
             send_alert_email(data)
+            send_fallback_gmail(data)
+
             send_to_google_sheet(data)
 
             return jsonify({"status":"success","id":complaint_id})
